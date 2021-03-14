@@ -1,0 +1,30 @@
+﻿<UserControl x:Class="WpfApp1.View.Takeoff"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:WpfApp1.View"
+             xmlns:models="clr-namespace:WpfApp1.Models"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="210">
+    <Grid Margin="0,0,0,0">
+        <Rectangle Fill="#FFF4F4F5"                                                                     HorizontalAlignment="Left" VerticalAlignment="Top"                      Height="300" Width="210" Stroke="Black"/>
+        <Label     x:Name="lblShipLaunchSetup"    Content="Ship Launch Setup"                           HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,14,0,0"    Height="26"  Width="111" HorizontalContentAlignment="Left"/>
+        <Label     x:Name="lblTrajAngle"          Content="Traj. Angle:"                                HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,45,0,0"   Height="26"  Width="68"/>
+        <Label     x:Name="lblRotAltitude"        Content="Rotation Alt.:"                              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,75,0,0"   Height="26"  Width="78"/>
+        <Label     x:Name="lblEndTurnAlt"         Content="End Turn Alt.:"                              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,135,0,0"  Height="26"  Width="80"/>
+        <Label     x:Name="lblTargetAlt"          Content="Target Alt.:"                                HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,165,0,0"  Height="26"  Width="66"/>
+        <Label     x:Name="lblStartTurnAlt"       Content="Start Turn Alt.:"                            HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,105,0,0"  Height="26"  Width="85"/>
+        <Label     x:Name="lblAtmosphereAlt"      Content="Atmosphere Alt.:"                            HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,195,0,0"  Height="26"  Width="98"/>
+        <TextBox   x:Name="txtTrajectoryAngle"    Text="{Binding ShipHeadingAngle,        Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="116,50,0,0"  Height="20"  Width="75" TextWrapping="Wrap"/>
+        <TextBox   x:Name="txtRotationAltitude"   Text="{Binding InitialRotationAltitude, Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="116,80,0,0"  Height="20"  Width="75" TextWrapping="Wrap"/>
+        <TextBox   x:Name="txtTurnStartAltitude"  Text="{Binding StartTurnAltitude,       Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="116,110,0,0" Height="20"  Width="75" TextWrapping="Wrap"/>
+        <TextBox   x:Name="txtTurnEndAltitude"    Text="{Binding EndTurnAltitude,         Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="116,140,0,0" Height="20"  Width="75" TextWrapping="Wrap"/>
+        <TextBox   x:Name="txtTargetAltitude"     Text="{Binding TargetAltitude,          Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="116,170,0,0" Height="20"  Width="75" TextWrapping="Wrap"/>
+        <TextBox   x:Name="txtAtmosphereAltitude" Text="{Binding AtmosphereAltitude,      Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="116,200,0,0" Height="20"  Width="75" TextWrapping="Wrap"/>
+        <ComboBox  x:Name="cbTakeOffList"                                                               HorizontalAlignment="Left" VerticalAlignment="Top" Margin="116,18,0,0"  Height="22"  Width="75" DisplayMemberPath="Name" ItemsSource="{Binding Path=TakeOffDescriptors}" SelectedItem="{Binding Path=SelectedTakeOff}" IsReadOnly="True"/>
+        <Button    x:Name="btnLaunch"             Content="Launch" Command="{Binding Launch}"           HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,264,0,0"  Height="20"  Width="186"/>
+        <Label     x:Name="lblSRBStage"           Content="SRB Stage:"                                  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,225,0,0"  Height="26"  Width="70" FontWeight="Bold" />
+        <TextBox   x:Name="txtSRB_Stage"          Text="{Binding SRBStage, Mode=TwoWay}"                HorizontalAlignment="Left" VerticalAlignment="Top" Margin="116,230,0,0" Height="20"  Width="75" TextWrapping="Wrap" FontWeight="Bold"/>
+    </Grid>
+</UserControl>

@@ -1,0 +1,22 @@
+﻿<UserControl x:Class="WpfApp1.View.Maneuver"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:WpfApp1.View"
+             mc:Ignorable="d" 
+             d:DesignHeight="170" d:DesignWidth="260">
+    <Grid>
+        <Rectangle Fill="#FFF4F4F5"                                                                              HorizontalAlignment="Left" VerticalAlignment="Top" Stroke="Black"       Height="170" Width="260"/>
+        <Button      x:Name="btnCircularize"         Content="Circularize"   Command="{Binding Circularize}"     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="17,15,0,0"   Height="20"  Width="94"/>
+        <Button      x:Name="btnExecuteManeuver"     Content="Exec Maneuver" Command="{Binding ExecuteManeuver}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,15,0,0"  Height="20"  Width="94"/>
+        <Label       x:Name="lblNodeTimeTo"          Content="Time Until Node [s]:"                              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="17,46,0,0"   Height="26"  Width="115"/>
+        <Label       x:Name="lblRemainingDeltaV"     Content="Remain. DeltaV [m/s]:"                             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="17,76,0,0"   Height="26"  Width="124"/>
+        <Label       x:Name="lblStartBurn"           Content="Maneuver Start in [s]:"                            HorizontalAlignment="Left" VerticalAlignment="Top" Margin="17,106,0,0"  Height="26"  Width="122"/>
+        <TextBox     x:Name="txtNodeTimeTo"          Text="{Binding NodeTimeTo,      Mode=TwoWay}"               HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,50,0,0"  Height="20"  Width="94" TextWrapping="Wrap" Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtRemainingDeltaV"     Text="{Binding RemainingDeltaV, Mode=TwoWay}"               HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,80,0,0"  Height="20"  Width="94" TextWrapping="Wrap" Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtStartBurn"           Text="{Binding StartBurn,       Mode=TwoWay}"               HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,110,0,0" Height="20"  Width="94" TextWrapping="Wrap" Focusable="False" IsReadOnly="True"/>
+        <RadioButton x:Name="rdReduceOrbit"          Content="Reduce Orbit"                                      HorizontalAlignment="Left" VerticalAlignment="Top" Margin="17,140,0,0"  Command="{Binding CircularizeSelection}" CommandParameter="{Binding ElementName=rdReduceOrbit,  Path=Content}"/>
+        <RadioButton x:Name="rdEnlargeOrbit"         Content="Enlarge Orbit"                                     HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,140,0,0" Command="{Binding CircularizeSelection}" CommandParameter="{Binding ElementName=rdEnlargeOrbit, Path=Content}"/>
+    </Grid>
+</UserControl>

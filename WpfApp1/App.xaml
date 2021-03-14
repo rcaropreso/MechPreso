@@ -1,0 +1,29 @@
+﻿<Application x:Class="WpfApp1.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:WpfApp1"
+             xmlns:viewmodel ="clr-namespace:WpfApp1.ViewModel"
+             xmlns:view ="clr-namespace:WpfApp1.View">
+    <Application.Resources>
+        <DataTemplate DataType="{x:Type viewmodel:ConnectionViewModel}">
+            <view:Connection/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewmodel:ManeuverViewModel}">
+            <view:Maneuver/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewmodel:TakeOffViewModel}">
+            <view:Takeoff/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewmodel:TelemetryViewModel}">
+            <view:Telemetry/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewmodel:SuicideBurnViewModel}">
+            <view:SuicideBurn/>
+        </DataTemplate>
+
+    </Application.Resources>
+</Application>

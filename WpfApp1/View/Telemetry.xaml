@@ -1,0 +1,47 @@
+﻿<UserControl x:Class="WpfApp1.View.Telemetry"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:WpfApp1.View"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="320">
+    <Grid>
+        <Rectangle   Fill="#FFF4F4F5"                                                               HorizontalAlignment="Left" VerticalAlignment="Top"                       Height="300" Width="320" Stroke="Black"/>
+        <Label       x:Name="lblTelemetryData"       Content="Telemetry Data:"                      HorizontalAlignment="Left" VerticalAlignment="Top" Margin="72,13,0,0"    Height="26"  Width="111" HorizontalContentAlignment="Left" FontWeight="Bold" />
+        <Label       x:Name="lblCurrentAltitude"     Content="Surf Alt. [m]:"                       HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,47,0,0"    Height="25"  Width="88" />
+        <Label       x:Name="lblCurrentHeading"      Content="Heading [deg]:"                       HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,76,0,0"    Height="26"  Width="88" />
+        <Label       x:Name="lblCurrentApoapsis"     Content="Apoapsis [m]:"                        HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,196,0,0"   Height="26"  Width="88" />
+        <Label       x:Name="lblCurrentSRB"          Content="SRB [kg]:"                            HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,136,0,0"   Height="26"  Width="88" />
+        <Label       x:Name="lblCurrentTermVelocity" Content="Term. Vel.:"                          HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,166,0,0"   Height="26"  Width="88" />
+        <Label       x:Name="lblCurrentPitch"        Content="Pitch [deg]:"                         HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,106,0,0"   Height="26"  Width="88" />
+        <Label       x:Name="lblGravity"             Content="Gravity:"                             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="179,166,0,0"  Height="26"  Width="90" RenderTransformOrigin="0.516,2.11"/>
+        <Label       x:Name="lblCurrentSpeed"        Content="Curr. Speed:"                         HorizontalAlignment="Left" VerticalAlignment="Top" Margin="179,46,0,0"   Height="26"  Width="88" />
+        <Label       x:Name="lblVerticalSpeed"       Content="Vert. Speed:"                         HorizontalAlignment="Left" VerticalAlignment="Top" Margin="179,76,0,0"   Height="26"  Width="88" />
+        <Label       x:Name="lblHorzSpeed"           Content="Horz. Speed:"                         HorizontalAlignment="Left" VerticalAlignment="Top" Margin="179,106,0,0"  Height="26"  Width="88" />
+        <Label       x:Name="lblEngineAcc"           Content="Engine Acc:"                          HorizontalAlignment="Left" VerticalAlignment="Top" Margin="179,136,0,0"  Height="26"  Width="88" />
+        <TextBox     x:Name="txtSurfaceAltitude"     Text="{Binding SurfaceAltitude,  Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="100,52,0,0"   Height="20"  Width="50" TextWrapping="Wrap"  Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtVesselHeading"       Text="{Binding VesselHeading,    Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="100,80,0,0"   Height="20"  Width="50" TextWrapping="Wrap"  Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtVesselPitch"         Text="{Binding VesselPitch,      Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="100,110,0,0"  Height="20"  Width="50" TextWrapping="Wrap"  Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtSRBFuel"             Text="{Binding SrbFuel,          Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="100,140,0,0"  Height="20"  Width="50" TextWrapping="Wrap"  Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtTerminalVelocity"    Text="{Binding TerminalVelocity, Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="100,170,0,0"  Height="20"  Width="50" TextWrapping="Wrap"  Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtApoapsisAltitude"    Text="{Binding ApoapsisAltitude, Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="100,200,0,0"  Height="20"  Width="50" TextWrapping="Wrap"  Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtCurrentSpeed"        Text="{Binding CurrentSpeed,     Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="259,52,0,0"   Height="20"  Width="50" TextWrapping="Wrap"  Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtVerticalSpeed"       Text="{Binding VerticalSpeed,    Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="259,82,0,0"   Height="20"  Width="50" TextWrapping="Wrap"  Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtHorizontalSpeed"     Text="{Binding HorizontalSpeed,  Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="259,112,0,0"  Height="20"  Width="50" TextWrapping="Wrap"  Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtEngineAcc"           Text="{Binding EngineAcc,        Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="259,142,0,0"  Height="20"  Width="50" TextWrapping="Wrap"  Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtGravity"             Text="{Binding Gravity,          Mode=TwoWay}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="259,170,0,0"  Height="20"  Width="50" TextWrapping="Wrap" Focusable="False" IsReadOnly="True"/>
+        <TextBox     x:Name="txtRollAngle"           Text=""                   HorizontalAlignment="Left" VerticalAlignment="Top" Margin="100,260,0,0"  Height="20"  Width="50" TextWrapping="Wrap" Focusable="True"/>
+        <Button      x:Name="btnRoll"                Content="Roll"            HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,260,0,0"   Height="20"  Width="64"  />
+        <Separator HorizontalAlignment="Left" Height="10" Margin="50,160,0,0" VerticalAlignment="Top" Width="230" RenderTransformOrigin="0.5,0.5">
+            <Separator.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="90"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Separator.RenderTransform>
+        </Separator>
+    </Grid>
+</UserControl>
