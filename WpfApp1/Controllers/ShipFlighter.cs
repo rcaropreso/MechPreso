@@ -408,7 +408,7 @@ namespace WpfApp1
             //this.SetPitchAndHeading(90, 0.0f, false, true);
             this.SetPitchAndHeading(90, _tod.ShipHeadingAngle, true, false);
 
-            this.SetPitchAndHeading(90, _tod.ShipHeadingAngle, false, false);
+            //this.SetPitchAndHeading(90, _tod.ShipHeadingAngle, false, false);
             //CurrentVessel.AutoPilot.Engage();
             //CurrentVessel.AutoPilot.TargetPitchAndHeading(90, _tod.ShipHeadingAngle);
             //CurrentVessel.AutoPilot.Wait();
