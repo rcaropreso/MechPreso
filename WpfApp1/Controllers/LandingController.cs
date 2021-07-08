@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 using KRPC.Client;
 using KRPC.Client.Services.SpaceCenter;
-using System.Reflection;
-using WpfApp1.Services;
-using WpfApp1.Utils;
 using WpfApp1.Models;
 using Vector3 = System.Tuple<double, double, double>;
 using System.Threading;
@@ -18,156 +13,16 @@ namespace WpfApp1.Controllers
     /// <summary>
     /// Classe que controla o pouso da nave (suicide burn)
     /// </summary>
-    public class LandingController : IAsyncMessageUpdate
+    public class LandingController : BaseShipController
     {
         /// <summary>
         /// Describes the controls of a given ship
         /// </summary>
         /// 
-        private Connection _conn = null;
-        private FlightTelemetry _flightTelemetry;
+        private readonly object lock_gate_suicide_burn = new object();
 
-        public Vessel CurrentVessel { get => _conn.SpaceCenter().ActiveVessel; }
-        public string ShipName { get => CurrentVessel.Name; }
-
-        private object lock_gate_suicide_burn = new object();
-
-        private bool _manualControl = false;
-        private object lock_gate_manual = new object();
-
-        private CommonDefs.VesselState _SuicideBurnStatus;
-        public CommonDefs.VesselState SuicideBurnStatus { get => _SuicideBurnStatus; }
-
-
-        public LandingController(in Connection conn, in FlightTelemetry _flightTel)
+        public LandingController(in Connection conn, in FlightTelemetry _flightTel) : base(conn, _flightTel)
         {
-            _conn = conn;
-            _flightTelemetry = _flightTel;
-        }
-
-        private bool ReturnToManualControl()
-        {
-            return _manualControl;
-        }
-
-        public void ResetManualControl()
-        {
-            lock (lock_gate_manual)
-            {
-                _manualControl = false;
-            }
-        }
-
-        public void SetManualControl()
-        {
-            lock (lock_gate_manual)
-            {
-                _manualControl = true;
-            }
-        }
-
-        public void ResetStates()
-        {
-            _SuicideBurnStatus = CommonDefs.VesselState.NotStarted;
-        }
-
-        public void SetupRoll(bool bWait = true)
-        {
-            SetPitchAndHeading(0, 0, true, bWait);
-        }
-
-        public float GetHeading()
-        {
-            ReferenceFrame CurrentRefFrame = _flightTelemetry.CurrentRefFrame;
-            Flight flight = CurrentVessel.Flight(CurrentRefFrame);
-
-            return flight.Heading;
-        }
-
-        public void SetPitchAndHeading(float pitch, float heading,
-            bool bKeepCurrentPitch = false, bool bKeepCurrentHeading = false, bool bWait = true)
-        {
-            MethodBase m = MethodBase.GetCurrentMethod();
-            StringBuilder strMessage = new StringBuilder();
-
-            if (pitch > 90.0f || pitch < -90.0f)
-            {
-                strMessage.AppendFormat("{0}.{1}: Invalid pitch range", m.ReflectedType.Name, m.Name);
-                SendMessage(strMessage.ToString());
-                return;
-            }
-
-            //Se bKeepCurrentPitch=true, ignora o valor de pitch
-            //Se bKeepCurrentHeading=true, ignora o valor de heading
-            ReferenceFrame CurrentRefFrame = _flightTelemetry.CurrentRefFrame;
-            Flight flight = CurrentVessel.Flight(CurrentRefFrame);
-
-            float h;
-            float p;
-
-            if (bKeepCurrentHeading)
-                h = flight.Heading;
-            else
-                h = heading;
-
-            if (bKeepCurrentPitch)
-                p = flight.Pitch;
-            else
-                p = pitch;
-
-            CurrentVessel.AutoPilot.TargetPitchAndHeading(p, h);
-
-            if (bWait)
-            {
-                Thread.Sleep(500); //precisa deste delay para dar tempo da nave se mover e o wait() detectar
-                CurrentVessel.AutoPilot.Wait();
-            }
-        }
-
-        public void SetShipPosition(SASMode mode, bool bWait = true)
-        {
-            //Para setar o flag AutoPilot.SAS, somente com AutoPilot Disengaged
-            //Ao que parece, setar o flag AutoPilot.SAS vai dar engage novamente
-            //mas é obrigatório aguardar um tempo antes de setar o SASMode
-            TurnOffAutoPilot();
-
-            CurrentVessel.Control.RCS = true;
-            CurrentVessel.AutoPilot.SAS = true;
-            Thread.Sleep(500);//Esse sleep é obrigatorio
-            CurrentVessel.AutoPilot.SASMode = mode;
-
-            if (bWait)
-            {
-                CurrentVessel.AutoPilot.Wait();
-            }
-        }
-
-        public void TurnOffAutoPilot()
-        {
-            CurrentVessel.AutoPilot.Disengage();
-            CurrentVessel.Control.SAS = true;
-            CurrentVessel.Control.RCS = true;
-
-            System.Threading.Thread.Sleep(500);
-
-            CurrentVessel.Control.SASMode = SASMode.StabilityAssist;
-        }
-
-        public void TurnOnAutoPilot()
-        {
-            CurrentVessel.AutoPilot.Engage();
-            CurrentVessel.Control.SAS = false;
-            CurrentVessel.Control.RCS = true;
-
-            System.Threading.Thread.Sleep(500);
-
-            //CurrentVessel.Control.SASMode = SASMode.StabilityAssist;
-        }
-
-        public void SendMessage(string strMessage)
-        {
-            Console.WriteLine(strMessage);
-            Mediator.Notify(CommonDefs.MSG_SEND_MESSAGE, strMessage);
         }
 
         //Suicide Burn method
@@ -409,35 +264,7 @@ namespace WpfApp1.Controllers
             SendMessage("Locking engine gimball...");
             SetEnginesGimball();
 
-            /*
-            float limitAltitude = 300.0f; //limite de emergencia
-
-            //Neste ponto, o veiculo deve estar proximo dos 30 m/s por causa do ultimo 'DoBurn'
-            data = _flightTelemetry.GetSuicideBurnTelemetryInfo();
-            if (data.VerticalVelocity < -30 && data.SurfaceAltitude > limitAltitude)
-            {
-                var av = 1.0f; //aceleração do veiculo fixada em 1 m/s
-                float distanceTo30 = (float) Math.Abs((30.0f * 30.0f - data.VerticalVelocity * data.VerticalVelocity) / (2 * av)); //Eq Torricelli, distancia percorrida para desacelerar até 30 m/s
-
-                //verifica se consegue desacelerar 1 m/s antes de ultrapassar os 300 m de altura, senao pula pra proxima etapa de desaceleração
-                if ( (data.SurfaceAltitude - distanceTo30) > limitAltitude)
-                {
-                    SendMessage("Decelerating to 30 m/s...");
-                    CurrentVessel.Control.Throttle = CalcThrustFactor(1.0f); //aceleração de 1m/s^2 para cima;
-                    while (true)
-                    {
-                        data = _flightTelemetry.GetSuicideBurnTelemetryInfo();
-                        if (data.VerticalVelocity >= -30)
-                            break;
-                        Thread.Sleep(50);
-                    }
-                }
-            }
-            */
-
             DoSoftBurn(300, 30, 0);      //final burn                    
-
-            //DoSoftBurn(300, 30, 0);   //mantem velocidade fixa de 30 /s até a 300m 
             DoSoftBurn(60.0f, 0, 10); //Desce na proporção de 1 décimo da velocidade em relação a altitude ate 60m
 
             //Estamos abaixo de 60, temos que garantir neste momento a velocidade de 2m/s
@@ -469,23 +296,6 @@ namespace WpfApp1.Controllers
             SetEnginesGimball(false);
 
             SendMessage("Final burn control has ended.");
-        }
-
-        private void SetEnginesGimball(bool bOn = true)
-        {
-            foreach (Part item in CurrentVessel.Parts.All)
-            {
-                if (item.Engine != null)
-                {
-                    try
-                    {
-                        item.Engine.GimbalLocked = bOn;
-                    }
-                    catch (System.InvalidOperationException e)
-                    {
-                    }
-                }
-            }
         }
 
         private void CheckShipPosition(float minAltitude)
@@ -545,19 +355,6 @@ namespace WpfApp1.Controllers
             var data = _flightTelemetry.GetSuicideBurnTelemetryInfo();
             f_thrust = (float)Math.Abs((maxAcceleration + data.Gravity) / data.EngineAcceleration);
 
-            /*
-             * var theta = data.Theta;
-            float verticalAcceleration = (float) ((data.EngineAcceleration )* Math.Sin(theta));
-
-            if( maxAcceleration >= verticalAcceleration )
-            {
-                f_thrust = 1.0f;
-            }
-            else
-            {
-                f_thrust = (float) Math.Abs( (maxAcceleration + data.Gravity) / verticalAcceleration);
-            }
-            */
             return f_thrust > 1.0f ? 1.0f : f_thrust;
         }
 
@@ -705,7 +502,6 @@ namespace WpfApp1.Controllers
 
                     //aqui é melhor chamar direto, senao o sleep dentro do metodo SetPitchAndHeading vai atrapalhar
                     CurrentVessel.AutoPilot.TargetPitchAndHeading(output, h);
-                    //this.SetPitchAndHeading(output, h); //mantem o heading alinhado com o vetor velocidade (retrograde)
 
                     //É necessario calcular o HEADING QUE MUDA AO LONGO DO TEMPO, SE A QUEIMA FOR LONGA.
                     //RESULTADO: O FOGUETE VAI ANDAR DE LADO E A QUEIMA FICARA DESALINHADA
@@ -777,28 +573,6 @@ namespace WpfApp1.Controllers
 
             float timeStep = 0.050f; //50 ms
 
-            //O set point deveria ser -1 (se fosse a velocidade alvo) e deve ser exatamente 1 para as velocidades serem iguais levando em conta os sinais das duas
-            //0.5 0.75 0.05
-            //PID _controller = new PID(_SP: 0.0f, _P: 0.50f, _I:0.010f, _D: 0.015f, _TimeStep: timeStep, _MinValue: -1.0f, _MaxValue: 1.0f);
-            //float output;
-
-            //Se a velocidade estiver muito abaixo do set point vai acumular erro negativo no termo integral e vai demorar 
-            //para o PID entrar em ação
-            //Espera velocidade atual igualar a velocidade alvo            
-            //while (data.CurrentSpeed < targetSpeed && data.VerticalVelocity < 0)
-            //{
-            //    if (ReturnToManualControl())
-            //        return;
-            //
-            //    data = _flightTelemetry.GetSuicideBurnTelemetryInfo();
-            // 
-            //    if (FixedVelocity == 0) //velocidade proporcional a altitude
-            //        targetSpeed = (float)data.SurfaceAltitude / AltitudeFactor; //velocidade positiva é para baixo
-            //  
-            //    Thread.Sleep(100);
-            //}
-
-            //CurrentVessel.Control.Throttle = 1.0f;
             while (true)
             {
                 if (ReturnToManualControl())
@@ -888,7 +662,6 @@ namespace WpfApp1.Controllers
             PID _controller = new PID(_SP: 0.0f, _P: 1.0f, _I: 0.0f, _D: 0.00f, _TimeStep: timeStep);
             float output;
 
-            //_CurrentVessel.Control.Throttle = 1.0f;
             while (true)
             {
 

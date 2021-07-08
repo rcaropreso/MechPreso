@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
 using WpfApp1.Services;
 using WpfApp1.Utils;
 
@@ -23,7 +18,7 @@ namespace WpfApp1
         public MissionController(ConnectionProxy connector)
         {           
             Connector = connector;
-            ShipControl = new ShipFlighter(Connector?._connection);
+            ShipControl = new ShipFlighter(Connector._connection);
         }
 
         private bool ReturnToManualControl()
