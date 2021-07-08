@@ -10,6 +10,7 @@ using KRPC.Client;
 using KRPC.Client.Services.KRPC;
 using WpfApp1.Services;
 using WpfApp1.Utils;
+using WpfApp1.Models;
 
 namespace WpfApp1
 {
@@ -85,7 +86,7 @@ namespace WpfApp1
         public void SendMessage(string strMessage)
         {
             Console.WriteLine(strMessage);
-            Mediator.Notify("SendMessage", strMessage);
+            Mediator.Notify(CommonDefs.MSG_SEND_MESSAGE, strMessage);
         }
     }
 }

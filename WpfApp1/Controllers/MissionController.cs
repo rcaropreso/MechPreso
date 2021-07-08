@@ -8,6 +8,8 @@ using System.Windows;
 using WpfApp1.Services;
 using WpfApp1.Utils;
 
+using WpfApp1.Models;
+
 namespace WpfApp1
 {
     class MissionController : IAsyncMessageUpdate
@@ -22,48 +24,6 @@ namespace WpfApp1
         {           
             Connector = connector;
             ShipControl = new ShipFlighter(Connector?._connection);
-        }
-
-        //This method is synchronous
-        public void ExecuteTakeOff(TakeOffDescriptor _tod)
-        {
-            //Restart Telemetry
-            RestartTelemetry();
-
-            //Fazer contagem regressiva e ligar a nave
-            for (int i = 3; i >= 0; i--)
-            {
-                Thread.Sleep(1000);
-                SendMessage("Launching in " + i + " seconds...");
-            }
-
-            SendMessage("Launch!");
-            ShipControl.Launch(_tod);
-
-            SendMessage("Waiting takeoff to end...");
-            while (ShipControl.TakeOffStatus != ShipFlighter.VesselState.Finished)
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                Thread.Sleep(500);
-            }
-
-            //Execute
-            PlanCircularization();
-
-            //Execute Maneuver
-            ExecuteManeuverNode();
-
-            //Wait
-            while (ShipControl.ManeuverStatus != ShipFlighter.VesselState.Finished)
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                Thread.Sleep(500);
-            }
-            SendMessage("Orbital Maneuver has ended.");
         }
 
         private bool ReturnToManualControl()
@@ -91,6 +51,16 @@ namespace WpfApp1
             ShipControl.RestartTelemetry();
         }
 
+        public void StopAllTelemetry(bool bClearScreen=true)
+        {
+            ShipControl.StopAllTelemetry();
+
+            if (bClearScreen)
+            {
+                ClearScreen();
+            }
+        }
+
         public void SetManualControl()
         {
             ShipControl.SetManualControl();
@@ -99,11 +69,159 @@ namespace WpfApp1
             {
                 _manualControl = true;
             }
+
+            StopAllTelemetry();
         }
 
         public void PlanCircularization(bool bReduce = false)
         {
             ShipControl.PlanCircularization(bReduce);
+        }
+
+        //This method is synchronous
+        public void ExecuteTakeOff(TakeOffDescriptor _tod)
+        {
+            //Restart Telemetry
+            RestartTelemetry();
+
+            //Fazer contagem regressiva e ligar a nave
+            for (int i = 3; i >= 0; i--)
+            {
+                Thread.Sleep(1000);
+                SendMessage("Launching in " + i + " seconds...");
+            }
+
+            SendMessage("Launch!");
+            ShipControl.Launch(_tod);
+
+            SendMessage("Waiting takeoff to end...");
+            while (ShipControl.TakeOffStatus != CommonDefs.VesselState.Finished)
+            {
+                if (ReturnToManualControl())
+                    return;
+
+                Thread.Sleep(500);
+            }
+
+            //Execute
+            PlanCircularization();
+
+            //Execute Maneuver
+            ExecuteManeuverNode();
+
+            SendMessage("Orbital Maneuver has ended.");
+        }
+
+        //This method is synchronous
+        public void ExecuteDeorbitBody(SuicideBurnSetup suicideBurnSetup)
+        {
+            RestartTelemetry();
+            Thread.Sleep(1000);
+
+            SendMessage("Deorbiting body...");
+
+            ShipControl.ExecuteDeorbitBody(suicideBurnSetup);
+
+            //Wait
+            while (ShipControl.SuicideBurnStatus != CommonDefs.VesselState.Finished)
+            {
+                if (ReturnToManualControl())
+                    return;
+
+                Thread.Sleep(500);
+            }
+
+            SendMessage("Deorbit body has ended.");
+            StopAllTelemetry(false);
+        }
+
+        //This method is synchronous
+        public void ExecuteCancelVVel(SuicideBurnSetup suicideBurnSetup)
+        {
+            RestartTelemetry();
+            Thread.Sleep(1000);
+
+            SendMessage("Cancelling Vertical Velocity...");
+
+            ShipControl.ExecuteCancelVVel(suicideBurnSetup);
+
+            //Wait
+            while (ShipControl.SuicideBurnStatus != CommonDefs.VesselState.Finished)
+            {
+                if (ReturnToManualControl())
+                    return;
+
+                Thread.Sleep(500);
+            }
+
+            SendMessage("Cancelling Vertical Velocity has ended.");
+            StopAllTelemetry(false);
+        }
+
+        public void ExecuteCancelHVel(SuicideBurnSetup suicideBurnSetup)
+        {
+            RestartTelemetry();
+            Thread.Sleep(1000);
+
+            SendMessage("Cancelling Horizontal Velocity...");
+
+            ShipControl.ExecuteCancelHVel(suicideBurnSetup);
+
+            //Wait
+            while (ShipControl.SuicideBurnStatus != CommonDefs.VesselState.Finished)
+            {
+                if (ReturnToManualControl())
+                    return;
+
+                Thread.Sleep(500);
+            }
+
+            SendMessage("Cancelling Horizontal Velocity has ended.");
+            StopAllTelemetry(false);
+        }
+
+        public void ExecuteStopBurn(SuicideBurnSetup suicideBurnSetup)
+        {
+            RestartTelemetry();
+            Thread.Sleep(1000);
+
+            SendMessage("Stop burn...");
+
+            ShipControl.ExecuteStopBurn(suicideBurnSetup);
+
+            //Wait
+            while (ShipControl.SuicideBurnStatus != CommonDefs.VesselState.Finished)
+            {
+                if (ReturnToManualControl())
+                    return;
+
+                Thread.Sleep(500);
+            }
+
+            SendMessage("Stop burn has ended.");
+            StopAllTelemetry(false);
+        }
+
+        public void ExecuteFineTunning(SuicideBurnSetup suicideBurnSetup)
+        {
+            RestartTelemetry();
+            Thread.Sleep(1000);
+
+            SendMessage("Fine tunning...");
+
+            ShipControl.ExecuteFineTunning(suicideBurnSetup);
+
+            //Wait
+            while (ShipControl.SuicideBurnStatus != CommonDefs.VesselState.Finished)
+            {
+                if (ReturnToManualControl())
+                    return;
+
+                Thread.Sleep(500);
+            }
+
+            SendMessage("Fine tunning has ended.");
+            StopAllTelemetry(false);
         }
 
         //This method is synchronous
@@ -117,7 +235,7 @@ namespace WpfApp1
             ShipControl.ExecuteSuicideBurn(suicideBurnSetup);
 
             //Wait
-            while (ShipControl.SuicideBurnStatus != ShipFlighter.VesselState.Finished)
+            while (ShipControl.SuicideBurnStatus != CommonDefs.VesselState.Finished)
             {
                 if (ReturnToManualControl())
                     return;
@@ -126,6 +244,7 @@ namespace WpfApp1
             }
 
             SendMessage("Suicide Burn has ended.");
+            StopAllTelemetry(false);
         }
 
         //This method is synchronous
@@ -139,7 +258,7 @@ namespace WpfApp1
             bool bRet = ShipControl.ExecuteManeuverNode();
 
             SendMessage("Waiting Maneuver Node to end...");
-            while (ShipControl.ManeuverStatus != ShipFlighter.VesselState.Finished)
+            while (ShipControl.ManeuverStatus != CommonDefs.VesselState.Finished)
             {
                 if (ReturnToManualControl())
                     return;
@@ -147,12 +266,19 @@ namespace WpfApp1
                 Thread.Sleep(1000);
             }
             SendMessage("Maneuver Node has ended.");
+
+            StopAllTelemetry();
         }
 
         public void SendMessage(string strMessage)
         {
             Console.WriteLine(strMessage);
-            Mediator.Notify("SendMessage", strMessage);
+            Mediator.Notify(CommonDefs.MSG_SEND_MESSAGE, strMessage);
+        }
+
+        public void ClearScreen()
+        {
+            Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN);
         }
     }
 }

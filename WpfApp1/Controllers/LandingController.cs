@@ -4,147 +4,78 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using System.Threading;
-
 using KRPC.Client;
 using KRPC.Client.Services.SpaceCenter;
-using WpfApp1.Controllers;
 using System.Reflection;
 using WpfApp1.Services;
 using WpfApp1.Utils;
 using WpfApp1.Models;
 using Vector3 = System.Tuple<double, double, double>;
+using System.Threading;
 
-namespace WpfApp1
+namespace WpfApp1.Controllers
 {
-    public class ShipFlighter : IAsyncMessageUpdate
+    /// <summary>
+    /// Classe que controla o pouso da nave (suicide burn)
+    /// </summary>
+    public class LandingController : IAsyncMessageUpdate
     {
         /// <summary>
         /// Describes the controls of a given ship
         /// </summary>
         /// 
         private Connection _conn = null;
-
         private FlightTelemetry _flightTelemetry;
-        public FlightTelemetry Telemetry { get => _flightTelemetry; }
-        
-        private TakeOffDescriptor _tod;
 
-        public Vessel CurrentVessel { get => _conn.SpaceCenter().ActiveVessel; }        
+        public Vessel CurrentVessel { get => _conn.SpaceCenter().ActiveVessel; }
         public string ShipName { get => CurrentVessel.Name; }
 
-        private object lock_gate_takeoff = new object();
-        private object lock_gate_maneuver = new object();
         private object lock_gate_suicide_burn = new object();
 
         private bool _manualControl = false;
         private object lock_gate_manual = new object();
 
-        private float _maneuverBurnTime;
-        public float ManeuverBurnTime
-        {
-            get
-            {
-                return _maneuverBurnTime;
-            }
-        }
-
-        private LandingController _landingController;
-        private TakeOffController _takeOffController;
-
-        private CommonDefs.VesselState _TakeOffStatus;
-        private CommonDefs.VesselState _ManeuverStatus;
         private CommonDefs.VesselState _SuicideBurnStatus;
-
-        public CommonDefs.VesselState TakeOffStatus { get => _TakeOffStatus;  }
-        public CommonDefs.VesselState ManeuverStatus { get => _ManeuverStatus; }
         public CommonDefs.VesselState SuicideBurnStatus { get => _SuicideBurnStatus; }
 
-        public ShipFlighter(Connection conn)
+
+        public LandingController(in Connection conn, in FlightTelemetry _flightTel)
         {
-            _conn = conn;                
-            _flightTelemetry = new FlightTelemetry(in conn);
-
-            //Create controllers
-            _landingController = new LandingController(in conn, in _flightTelemetry);
-            _takeOffController = new TakeOffController(in conn, in _flightTelemetry);
-
-            SendMessage("Starting Telemetry...");
-            _flightTelemetry?.StartAllTelemetry();
-            Thread.Sleep(2000);
-            SendMessage("Telemetry has started.");
+            _conn = conn;
+            _flightTelemetry = _flightTel;
         }
 
-        //IDEIA: criar uma classe BaseShipController com metodos basicos de controle da nave
-        //TakeOffController e LandingController derivam de BaseShipController
-        //Criar uma classe ManeuverController derivada de BaseShipController
-
-        //METODO VIRTUAL (OVERRIDE) NA BaseShipController
-        public void SetManualControl()
-        {
-            _landingController.SetManualControl();
-            _takeOffController.SetManualControl();
-
-            //REMOVER 
-            lock (lock_gate_manual)
-            {
-                _manualControl = true;
-            }
-            //REMOVER 
-        }
-
-        //METODO VIRTUAL (OVERRIDE) NA BaseShipController
-        public void ResetManualControl()
-        {
-            _landingController.ResetManualControl();
-            _takeOffController.ResetManualControl();
-
-            //REMOVER 
-            lock (lock_gate_manual)
-            {
-                _manualControl = false;
-            }
-            //REMOVER 
-        }
-
-        //FICA AQUI
-        public void RestartTelemetry()
-        {
-            _flightTelemetry.RestartTelemetry();
-        }
-
-        //FICA AQUI
-        public void StopAllTelemetry()
-        {
-            _flightTelemetry.StopAllTelemetry();
-        }
-
-        //METODO VIRTUAL (OVERRIDE) NA BaseShipController
-        public void ResetStates()
-        {
-            _landingController.ResetStates();
-            _takeOffController.ResetStates();
-
-            //REMOVER
-            _TakeOffStatus = CommonDefs.VesselState.NotStarted;
-            _ManeuverStatus = CommonDefs.VesselState.NotStarted;
-            _SuicideBurnStatus = CommonDefs.VesselState.NotStarted;
-            //REMOVER
-        }
-
-        //REMOVER
         private bool ReturnToManualControl()
         {
             return _manualControl;
         }
 
-        //DEVE IR PARA BaseShipController
+        public void ResetManualControl()
+        {
+            lock (lock_gate_manual)
+            {
+                _manualControl = false;
+            }
+        }
+
+        public void SetManualControl()
+        {
+            lock (lock_gate_manual)
+            {
+                _manualControl = true;
+            }
+        }
+
+        public void ResetStates()
+        {
+            _SuicideBurnStatus = CommonDefs.VesselState.NotStarted;
+        }
+
         public void SetupRoll(bool bWait = true)
         {
             SetPitchAndHeading(0, 0, true, bWait);
         }
 
-        //DEVE IR PARA BaseShipController
         public float GetHeading()
         {
             ReferenceFrame CurrentRefFrame = _flightTelemetry.CurrentRefFrame;
@@ -153,9 +84,8 @@ namespace WpfApp1
             return flight.Heading;
         }
 
-        //DEVE IR PARA BaseShipController
         public void SetPitchAndHeading(float pitch, float heading,
-            bool bKeepCurrentPitch = false, bool bKeepCurrentHeading = false, bool bWait=true)
+            bool bKeepCurrentPitch = false, bool bKeepCurrentHeading = false, bool bWait = true)
         {
             MethodBase m = MethodBase.GetCurrentMethod();
             StringBuilder strMessage = new StringBuilder();
@@ -194,15 +124,14 @@ namespace WpfApp1
             }
         }
 
-        //DEVE IR PARA BaseShipController
-        public void SetShipPosition(SASMode mode, bool bWait=true)
+        public void SetShipPosition(SASMode mode, bool bWait = true)
         {
             //Para setar o flag AutoPilot.SAS, somente com AutoPilot Disengaged
             //Ao que parece, setar o flag AutoPilot.SAS vai dar engage novamente
             //mas é obrigatório aguardar um tempo antes de setar o SASMode
             TurnOffAutoPilot();
 
-            CurrentVessel.Control.RCS = true;            
+            CurrentVessel.Control.RCS = true;
             CurrentVessel.AutoPilot.SAS = true;
             Thread.Sleep(500);//Esse sleep é obrigatorio
             CurrentVessel.AutoPilot.SASMode = mode;
@@ -213,7 +142,6 @@ namespace WpfApp1
             }
         }
 
-        //DEVE IR PARA BaseShipController
         public void TurnOffAutoPilot()
         {
             CurrentVessel.AutoPilot.Disengage();
@@ -225,7 +153,6 @@ namespace WpfApp1
             CurrentVessel.Control.SASMode = SASMode.StabilityAssist;
         }
 
-        //DEVE IR PARA BaseShipController
         public void TurnOnAutoPilot()
         {
             CurrentVessel.AutoPilot.Engage();
@@ -233,12 +160,8 @@ namespace WpfApp1
             CurrentVessel.Control.RCS = true;
 
             System.Threading.Thread.Sleep(500);
-        }
 
-        //REMOVER
-        public void StartSRBTelemetry(int iSRBStage = 0)
-        {
-            _flightTelemetry.StartSRBTelemetry(iSRBStage);
+            //CurrentVessel.Control.SASMode = SASMode.StabilityAssist;
         }
 
         public void SendMessage(string strMessage)
@@ -247,200 +170,6 @@ namespace WpfApp1
             Mediator.Notify(CommonDefs.MSG_SEND_MESSAGE, strMessage);
         }
 
-        //REMOVER
-        //Thread
-        private void CheckAcceleration()
-        {
-            SendMessage("Acceleration check has started.");
-            while (true)
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                var apoapsis_altitude = _flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Apoapsis_Altitude);
-                if (apoapsis_altitude > _tod.TargetAltitude * 0.9)
-                    break;
-
-                Thread.Sleep(200);
-            }
-
-            //We have reached between 90% and 100% of apoapsis
-            SendMessage("Approaching target apoapsis");
-            //Reduce Vessel throttle
-            CurrentVessel.Control.Throttle = 0.25f;
-
-            while(true)
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                var apoapsis_altitude = _flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Apoapsis_Altitude);
-                if (apoapsis_altitude >= _tod.TargetAltitude)
-                    break;
-
-                Thread.Sleep(200);
-            }
-
-            SendMessage("Target apoapsis has been reached!");
-            CurrentVessel.Control.Throttle = 0.0f;
-            SendMessage("Acceleration check has ended.");
-        }
-
-        //REMOVER
-        //Thread
-        private void CheckGravityTurn()
-        {
-            SendMessage("Gravity turn check has started.");
-            double turn_angle = 0.0;
-            float current_angle = 0.0f;
-
-            while(true)
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                var altitude = _flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Surface_Altitude);
-                //Gravity turn
-                if( altitude > _tod.StartTurnAltitude )
-                {
-                    double frac = (altitude - _tod.StartTurnAltitude) / (_tod.EndTurnAltitude - _tod.StartTurnAltitude);
-                    double new_turn_angle = frac * 90;
-
-                    if( Math.Abs(new_turn_angle - turn_angle) > 0.5 )
-                    {
-                        turn_angle = new_turn_angle;
-                        CurrentVessel.AutoPilot.Engage();
-
-                        current_angle = (float)(90 - turn_angle);
-                        CurrentVessel.AutoPilot.TargetPitchAndHeading(current_angle, _tod.ShipHeadingAngle);
-                    }
-                }
-
-                if (altitude > _tod.EndTurnAltitude)
-                {
-                    SendMessage("Gravity end turn altitude has been reached!");
-                    break;
-                }
-
-                Thread.Sleep(50);
-            }//while(true)
-
-            //if current angle is not zero, finish to turn the ship
-            CurrentVessel.AutoPilot.Engage();
-            Thread.Sleep(500);
-            CurrentVessel.Control.RCS = true;
-            CurrentVessel.AutoPilot.TargetPitchAndHeading(0, _tod.ShipHeadingAngle);
-            
-            SendMessage("Gravity turn check has ended.");
-        }
-
-        //REMOVER
-        //Thread
-        private void CheckSRBs(int iSRBStage)
-        {
-            SendMessage("Solid fuel check has started.");
-            this.StartSRBTelemetry(iSRBStage);
-            Thread.Sleep(1000);
-
-            while (true)
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                var solid_fuel = _flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.SRB_Fuel);
-                //SendMessage("SRB Fuel =" + solid_fuel.ToString());
-                
-                if(solid_fuel <= 300)
-                {
-                    for(int i=5; i>0; i--)
-                    {
-                        Thread.Sleep(1000);
-                        SendMessage("Separating Booster in " + i + " seconds...");
-                    }
-
-                    CurrentVessel.Control.ActivateNextStage();
-                    SendMessage("Boosters separated!");
-                    break;
-                }
-
-                Thread.Sleep(1000);
-            }
-            SendMessage("Solid fuel check has ended.");
-        }
-
-        //REMOVER
-        private bool IsBelowRotationAltitude()
-        {
-            var altitude = _flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Surface_Altitude);
-            return (altitude < _tod.InitialRotationAltitude);
-        }
-
-        private bool IsBelowLimitAltitude()
-        {
-            var altitude = _flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Surface_Altitude);
-            return (altitude < _tod.AtmosphereAltitude + 500);
-        }
-
-        //REMOVER
-        //Thread
-        private void CheckInitialRotation()
-        {
-            //Initial Rotation
-            while (IsBelowRotationAltitude())
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                Thread.Sleep(200);
-            }
-
-            SendMessage("Starting Initial Rotation...");
-            TurnOnAutoPilot();
-            this.SetPitchAndHeading(90, 0.0f, false, true); //primeiro fique na vertical            
-            this.SetPitchAndHeading(90, _tod.ShipHeadingAngle, true, false); //agora rotacionaa
-
-            SendMessage("Initial Rotation has been completed.");
-        }
-
-        //REMOVER
-        private void CheckTakeoff(int iSRBStage)
-        {
-            //Create threads
-            //Acceleration
-            //Gravity Turn
-            //SRB
-            Task t1 = Task.Run(() => CheckInitialRotation());
-            Task t2 = Task.Run(() => CheckAcceleration());
-            Task t3 = Task.Run(() => CheckGravityTurn());
-            Task t4 = iSRBStage > 0 ? Task.Run(() => CheckSRBs(iSRBStage)) : null;
-
-            _TakeOffStatus = CommonDefs.VesselState.Executing;
-
-            //Wait threads
-            t1.Wait();
-            t2.Wait();
-            t3.Wait();
-
-            if (iSRBStage > 0)
-                t4.Wait();
-
-            SendMessage("Coasting out of atmosphere...");
-            while (IsBelowLimitAltitude())
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                Thread.Sleep(200);
-            }
-
-            lock (lock_gate_takeoff)
-            {
-                _TakeOffStatus = CommonDefs.VesselState.Finished;
-            }
-            SendMessage("Out of atmosphere.");
-        }
-
-        //REMOVER
         //Suicide Burn method
         private bool IsLandingOnSea()
         {
@@ -460,7 +189,6 @@ namespace WpfApp1
             return bRet;
         }
 
-        //REMOVER
         private void CheckCancelVVel(SuicideBurnSetup suicideBurnSetup)
         {
             SendMessage("Starting cancelling vertical velocity thread...");
@@ -481,7 +209,6 @@ namespace WpfApp1
             SendMessage("Cancelling vertical velocity thread has ended.");
         }
 
-        //REMOVER
         private void CheckCancelHVel(SuicideBurnSetup suicideBurnSetup)
         {
             SendMessage("Starting cancelling horizontal velocity thread...");
@@ -506,7 +233,6 @@ namespace WpfApp1
             SendMessage("Cancelling horizontal velocity thread has ended.");
         }
 
-        //REMOVER
         private void CheckStopBurn(SuicideBurnSetup suicideBurnSetup)
         {
             SendMessage("Starting stop burn thread...");
@@ -528,7 +254,6 @@ namespace WpfApp1
             SendMessage("Stop burn thread has ended.");
         }
 
-        //REMOVER
         private void CheckFineTunning(SuicideBurnSetup suicideBurnSetup)
         {
             SendMessage("Starting fine tunning thread...");
@@ -552,7 +277,6 @@ namespace WpfApp1
             SendMessage("Fine tunning thread has ended.");
         }
 
-        //REMOVER
         private void CheckDeorbitBody(SuicideBurnSetup suicideBurnSetup)
         {
             SendMessage("Starting deorbit body thread...");
@@ -577,7 +301,6 @@ namespace WpfApp1
             SendMessage("Deorbit body thread has ended.");
         }
 
-        //REMOVER
         private void CheckSuicideBurn(SuicideBurnSetup suicideBurnSetup)
         {
             SendMessage("Starting suicide burn thread...");
@@ -609,7 +332,7 @@ namespace WpfApp1
 
             CurrentVessel.Control.SpeedMode = SpeedMode.Surface;
 
-            TurnOnAutoPilot();            
+            TurnOnAutoPilot();
             SetShipPosition(SASMode.Retrograde, false);
             SetupRoll(false);
 
@@ -617,13 +340,13 @@ namespace WpfApp1
             //CurrentVessel.Control.SetActionGroup(9, true); //aciona escudo de calor configurado em 9, se houver
 
             //Check for landing on "Land" or "Sea"
-            bool bLandingOnSea  = IsLandingOnSea();
+            bool bLandingOnSea = IsLandingOnSea();
 
             if (!bLandingOnSea)
             {
                 //Cancela velocidade vertical, levando em conta o ponto de maior altitude do planeta em questão
                 DoBurn(CommonDefs.BurnType.Vertical, suicideBurnSetup.MinVerticalVelocity, CommonDefs.WhenStartBurn.WaitVerticalAltitude, (float)data.HighestPeak, 0.10f);
-                
+
                 //Ajusta a posição da nave
                 SetShipPosition(SASMode.Retrograde, true);
                 SetupRoll(false);
@@ -645,7 +368,7 @@ namespace WpfApp1
                 CurrentVessel.Control.SetActionGroup(7, true); //destrava articulação
                 CurrentVessel.Control.SetActionGroup(8, true); //move articulação
 
-                foreach(Parachute chute in CurrentVessel.Parts.Parachutes)
+                foreach (Parachute chute in CurrentVessel.Parts.Parachutes)
                 {
                     chute.Deploy();
                 }
@@ -677,7 +400,6 @@ namespace WpfApp1
             SendMessage(strMessage.ToString());
         }
 
-        //REMOVER
         private void DoFinalBurn(SuicideBurnSetup suicideBurnSetup)
         {
             SendMessage("Starting final burn control...");
@@ -749,8 +471,7 @@ namespace WpfApp1
             SendMessage("Final burn control has ended.");
         }
 
-        //DEVE IR PARA BaseShipController
-        private void SetEnginesGimball(bool bOn=true)
+        private void SetEnginesGimball(bool bOn = true)
         {
             foreach (Part item in CurrentVessel.Parts.All)
             {
@@ -767,7 +488,6 @@ namespace WpfApp1
             }
         }
 
-        //REMOVER
         private void CheckShipPosition(float minAltitude)
         {
             SendMessage("Starting position check...");
@@ -778,7 +498,7 @@ namespace WpfApp1
                     break;
 
                 data = _flightTelemetry.GetSuicideBurnTelemetryInfo();
-                if(data.HorizontalVelocity < 2)
+                if (data.HorizontalVelocity < 2)
                 {
                     SetPitchAndHeading(90, 0, false, true, false);
                 }
@@ -787,7 +507,7 @@ namespace WpfApp1
                     SetShipPosition(SASMode.Retrograde, false);
                 }
 
-                if(data.SurfaceAltitude < minAltitude)
+                if (data.SurfaceAltitude < minAltitude)
                 {
                     SetPitchAndHeading(90, 0, false, true, false);
                     break;
@@ -801,7 +521,7 @@ namespace WpfApp1
             SendMessage("Position check has ended.");
         }
 
-        //REMOVER
+
         //Suicide Burn method
         private float CalcThrustFactor(float maxAcceleration)
         {
@@ -838,10 +558,9 @@ namespace WpfApp1
                 f_thrust = (float) Math.Abs( (maxAcceleration + data.Gravity) / verticalAcceleration);
             }
             */
-            return f_thrust > 1.0f ? 1.0f : f_thrust ;
+            return f_thrust > 1.0f ? 1.0f : f_thrust;
         }
 
-        //REMOVER
         private void DoBurnPreparation(CommonDefs.BurnType burnType = CommonDefs.BurnType.Diagonal)
         {
             StringBuilder strMessage = new StringBuilder();
@@ -877,7 +596,6 @@ namespace WpfApp1
             SendMessage(strMessage.ToString());
         }
 
-        //REMOVER
         private void DoBurn(CommonDefs.BurnType burnType = CommonDefs.BurnType.Diagonal, float finalSpeed = 10.0f,
             CommonDefs.WhenStartBurn altType = CommonDefs.WhenStartBurn.WaitVerticalAltitude, float offsetAltitude = 0.0f, float safetyMargin = 0.10f)
         {
@@ -923,11 +641,11 @@ namespace WpfApp1
                         SendMessage("Vertical burn finished. Vertical Velocity is lower than final speed.");
                         break;
                     }
-                    if(data.VerticalVelocity >= 0.0d)
+                    if (data.VerticalVelocity >= 0.0d)
                     {
                         SendMessage("Vertical burn finished. Vertical Velocity has changed its signal.");
                         break;
-                    }                        
+                    }
                 }
 
                 if (burnType == CommonDefs.BurnType.Horizontal)
@@ -938,7 +656,7 @@ namespace WpfApp1
                         break;
                     }
 
-                    if ( iSampleCounter > nSamples && (prevHorzV - data.HorizontalVelocity) < 0.0d)
+                    if (iSampleCounter > nSamples && (prevHorzV - data.HorizontalVelocity) < 0.0d)
                     {
                         strMessage.Clear();
                         strMessage.AppendFormat("Changed signal. VH_PREV={0}, VH_NOW={1}", prevHorzV, data.HorizontalVelocity);
@@ -946,10 +664,10 @@ namespace WpfApp1
 
                         //SendMessage("Horizontal burn finished. Horizontal Velocity has changed its signal.");
                         break;
-                    }                        
+                    }
                 }
 
-                if (burnType == CommonDefs.BurnType.Diagonal) 
+                if (burnType == CommonDefs.BurnType.Diagonal)
                 {
                     if (Math.Abs(data.HorizontalVelocity) <= Math.Abs(finalSpeed))
                     {
@@ -973,11 +691,11 @@ namespace WpfApp1
                         SendMessage("Retrograde burn finished. Vertical Velocity is lower than final speed.");
                         break;
                     }
-                    if(data.VerticalVelocity >= 0.0d)
+                    if (data.VerticalVelocity >= 0.0d)
                     {
                         SendMessage("Retrograde burn finished. Vertical Velocity has changed its signal.");
                         break;
-                    }                        
+                    }
                 }
 
                 //Em diagonal, a inclinação sera controlada pelo PID
@@ -993,16 +711,16 @@ namespace WpfApp1
                     //RESULTADO: O FOGUETE VAI ANDAR DE LADO E A QUEIMA FICARA DESALINHADA
                     ReferenceFrame CurrentRefFrame = _flightTelemetry.CurrentRefFrame;
                     var velocityDirection = CurrentVessel.Velocity(CurrentRefFrame);
-                   
+
                     // Direção do veiculo no plano do horizonte
                     //como a nave está indo "de ré" pois estamos na posição retrograda, vamos inverter o sinal do vetor de velocidade
-                    var horizonVelocityDirection = new Vector3(0, velocityDirection.Item2*(-1), velocityDirection.Item3*(-1));
+                    var horizonVelocityDirection = new Vector3(0, velocityDirection.Item2 * (-1), velocityDirection.Item3 * (-1));
 
                     // Calcula o 'heading' - angulo entre o norte e a direção no plano do horizonte
                     var north = new Vector3(0, 1, 0);
 
-                    h = (float) VectorDescriptor.AngleBetweenVectors(north, horizonVelocityDirection);
-                    
+                    h = (float)VectorDescriptor.AngleBetweenVectors(north, horizonVelocityDirection);
+
                     if (horizonVelocityDirection.Item3 < 0)
                         h = 360 - h;
                 }
@@ -1015,7 +733,7 @@ namespace WpfApp1
                 data = _flightTelemetry.GetSuicideBurnTelemetryInfo();
                 iSampleCounter++;
 
-                Thread.Sleep((int) (1000 * timeStep));
+                Thread.Sleep((int)(1000 * timeStep));
             }
 
             CurrentVessel.Control.Throttle = 0.0f;
@@ -1035,9 +753,8 @@ namespace WpfApp1
             SendMessage(strMessage.ToString());
         }
 
-        //REMOVER
         //Suicide Burn method
-        private void DoSoftBurn(float minAltitude, float FixedVelocity = 0, float AltitudeFactor=100, float max_thrust=1.0f)
+        private void DoSoftBurn(float minAltitude, float FixedVelocity = 0, float AltitudeFactor = 100, float max_thrust = 1.0f)
         {
             //FixedVelocity : se for diferente de zero, utiliza como valor fixo, caso contrario utiliza o proporcional de Altitude/AltitudeFactor
             //FixedVelocity tem precedencia sobre AltitudeFactor, se FixedVelocity for diferente de zero (não vai importar o valor de AltitudeFactor)
@@ -1046,7 +763,7 @@ namespace WpfApp1
             StringBuilder strMessage = new StringBuilder();
             strMessage.AppendFormat("Starting SOFT burn for Alt = {0}m, FixedVel = {1}m/s and Factor={2}.", minAltitude, FixedVelocity, AltitudeFactor);
             SendMessage(strMessage.ToString());
-       
+
             var data = _flightTelemetry.GetSuicideBurnTelemetryInfo();
 
             if (data.SurfaceAltitude < minAltitude)
@@ -1054,7 +771,7 @@ namespace WpfApp1
 
             float targetSpeed;
             if (FixedVelocity == 0)
-                targetSpeed = (float) data.SurfaceAltitude / AltitudeFactor; //velocidade positiva é para baixo
+                targetSpeed = (float)data.SurfaceAltitude / AltitudeFactor; //velocidade positiva é para baixo
             else
                 targetSpeed = Math.Abs(FixedVelocity);
 
@@ -1096,12 +813,12 @@ namespace WpfApp1
                 data = _flightTelemetry.GetSuicideBurnTelemetryInfo();
 
                 if (FixedVelocity == 0) //velocidade proporcional a altitude
-                    targetSpeed = (float) data.SurfaceAltitude / AltitudeFactor; //velocidade positiva é para baixo
+                    targetSpeed = (float)data.SurfaceAltitude / AltitudeFactor; //velocidade positiva é para baixo
 
                 if (data.VerticalVelocity >= 0)
                     break;
 
-                if(data.CurrentSpeed > targetSpeed)
+                if (data.CurrentSpeed > targetSpeed)
                 {
                     CurrentVessel.Control.Throttle = max_thrust;
                 }
@@ -1120,8 +837,7 @@ namespace WpfApp1
             SendMessage(strMessage.ToString());
         }
 
-        //REMOVER
-        private void WaitBurnAltitude(CommonDefs.WhenStartBurn altType, float offsetAltitude=0.0f, float safetyMargin=0.10f)
+        private void WaitBurnAltitude(CommonDefs.WhenStartBurn altType, float offsetAltitude = 0.0f, float safetyMargin = 0.10f)
         {
             StringBuilder strMessage = new StringBuilder();
             strMessage.AppendFormat("Waiting altitude: when = {0}, limitAlt = {1}, safetyMargin = {2}.", CommonDefs.AltitudeTypeToString(altType), offsetAltitude, safetyMargin);
@@ -1150,7 +866,6 @@ namespace WpfApp1
             }
         }
 
-        //REMOVER
         //Suicide Burn method
         private void DeorbitBody(float targetAltitude)
         {
@@ -1160,7 +875,7 @@ namespace WpfApp1
                 return;
 
             //Count down
-            for ( int counter = 3; counter >= 0; counter--)
+            for (int counter = 3; counter >= 0; counter--)
             {
                 StringBuilder sMessage = new StringBuilder();
                 sMessage.AppendFormat("Start deorbiting in {0} seconds", counter);
@@ -1180,11 +895,11 @@ namespace WpfApp1
                 if (ReturnToManualControl())
                     return;
 
-                periapsis = (float) _flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Periapsis_Altitude);
+                periapsis = (float)_flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Periapsis_Altitude);
 
-                output = _controller.Output( (targetAltitude - periapsis) / Math.Abs(periapsis));
+                output = _controller.Output((targetAltitude - periapsis) / Math.Abs(periapsis));
                 CurrentVessel.Control.Throttle = output;
-                Thread.Sleep( (int)timeStep*1000);
+                Thread.Sleep((int)timeStep * 1000);
 
                 if (output < 0.1)
                     break;
@@ -1193,7 +908,6 @@ namespace WpfApp1
             CurrentVessel.Control.Throttle = 0.0f;
         }
 
-        //REFATORAR PARA CHAMAR O METODO EQUIVALENTE NA CLASSE _takeOffController
         //ESTE AQUI TEM QUE SER THREAD TAMBÉM SENAO TRAVA A TELA
         //VAMOS TER QUE CRIAR UMA THREAD DE MONITORAMENTO E VAZAR DAQUI
         public void ExecuteSuicideBurn(SuicideBurnSetup suicideBurnSetup)
@@ -1205,7 +919,6 @@ namespace WpfApp1
             Task t0 = Task.Run(() => CheckSuicideBurn(suicideBurnSetup));
         }
 
-        //REFATORAR PARA CHAMAR O METODO EQUIVALENTE NA CLASSE _landingController
         public void ExecuteDeorbitBody(SuicideBurnSetup suicideBurnSetup)
         {
             _SuicideBurnStatus = CommonDefs.VesselState.Preparation;
@@ -1215,7 +928,6 @@ namespace WpfApp1
             Task t0 = Task.Run(() => CheckDeorbitBody(suicideBurnSetup));
         }
 
-        //REFATORAR PARA CHAMAR O METODO EQUIVALENTE NA CLASSE _landingController
         public void ExecuteCancelVVel(SuicideBurnSetup suicideBurnSetup)
         {
             _SuicideBurnStatus = CommonDefs.VesselState.Preparation;
@@ -1225,7 +937,6 @@ namespace WpfApp1
             Task t0 = Task.Run(() => CheckCancelVVel(suicideBurnSetup));
         }
 
-        //REFATORAR PARA CHAMAR O METODO EQUIVALENTE NA CLASSE _landingController
         public void ExecuteCancelHVel(SuicideBurnSetup suicideBurnSetup)
         {
             _SuicideBurnStatus = CommonDefs.VesselState.Preparation;
@@ -1235,7 +946,6 @@ namespace WpfApp1
             Task t0 = Task.Run(() => CheckCancelHVel(suicideBurnSetup));
         }
 
-        //REFATORAR PARA CHAMAR O METODO EQUIVALENTE NA CLASSE _landingController
         public void ExecuteStopBurn(SuicideBurnSetup suicideBurnSetup)
         {
             _SuicideBurnStatus = CommonDefs.VesselState.Preparation;
@@ -1245,7 +955,6 @@ namespace WpfApp1
             Task t0 = Task.Run(() => CheckStopBurn(suicideBurnSetup));
         }
 
-        //REFATORAR PARA CHAMAR O METODO EQUIVALENTE NA CLASSE _landingController
         public void ExecuteFineTunning(SuicideBurnSetup suicideBurnSetup)
         {
             _SuicideBurnStatus = CommonDefs.VesselState.Preparation;
@@ -1253,224 +962,6 @@ namespace WpfApp1
             Console.WriteLine("Executing fine tunning...");
 
             Task t0 = Task.Run(() => CheckFineTunning(suicideBurnSetup));
-        }
-
-        //REFATORAR PARA CHAMAR O METODO EQUIVALENTE NA CLASSE _takeOffController
-        public void Launch(TakeOffDescriptor _tod)
-        {
-            _TakeOffStatus = CommonDefs.VesselState.Preparation;
-
-            this._tod = _tod;
-            Console.WriteLine("Launching...");
-            CurrentVessel.Control.SAS = false;
-            CurrentVessel.Control.RCS = false;
-            CurrentVessel.Control.Throttle = 1;
-            CurrentVessel.Control.ActivateNextStage();
-
-            Task t0 = Task.Run(() => CheckTakeoff(_tod.SRBStage));//return control to GUI
-        }
-
-        //DEVE IR PARA A CLASSE ManeuverController
-        public void PlanCircularization(bool bReduceOrbit = false)
-        {
-            //bReduceOrbit => reduce the orbit from periapsis if true
-            //bReduceOrbit => enlarge the orbit from apoapsis if false
-
-            //Plan circularization burn (using vis-viva equation)
-            SendMessage("Planning Circularization");
-
-            double currentUT = _flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.UT);
-            double uTime;
-
-            double r;
-            if (bReduceOrbit)
-            {
-                r = CurrentVessel.Orbit.Periapsis; //distance between the two bodies, usuallly the planet is on elipsis focus
-                uTime = currentUT + CurrentVessel.Orbit.TimeToPeriapsis;
-            }
-            else
-            {
-                r = CurrentVessel.Orbit.Apoapsis; //distance between the two bodies, usuallly the planet is on elipsis focus
-                uTime = currentUT + CurrentVessel.Orbit.TimeToApoapsis;
-            }
-
-            float mu  = CurrentVessel.Orbit.Body.GravitationalParameter;            
-            double a = CurrentVessel.Orbit.SemiMajorAxis;
-
-            //Velocity on current orbit
-            double v1 = Math.Sqrt(mu * ((2.0 / r) - (1.0 / a)));
-
-            //Velocity on adjusted orbit (circular)
-            a = r; //on circle the semi-major axis IS THE RADIUS
-            double v2 = Math.Sqrt(mu * ((2.0 / r) - (1.0 / a)));
-
-            //Delta-V for orbit change (the signal is correctly calculated here)
-            float delta_v = (float) (v2 - v1);
-
-            //Creating the maneuver node
-            CurrentVessel.Control.AddNode( uTime, delta_v );
-        }
-
-        //REFATORAR PARA UTILIZAR A CLASSE _maneuverController
-        public bool ExecuteManeuverNode()
-        {
-            if (CurrentVessel.AvailableThrust == 0 || CurrentVessel.SpecificImpulse == 0)
-            {
-                SendMessage("The engines are off, activate them, aborting maneuver...");
-                return false;
-            }
-
-            Node node = null;
-            if(CurrentVessel.Control.Nodes.Count > 0)
-            {
-                node = CurrentVessel.Control.Nodes[0];
-            }
-            else
-            {
-                SendMessage("No maneuver nodes available!");
-                return false;
-            }
-
-            _ManeuverStatus = CommonDefs.VesselState.Preparation;
-            Task t0 = Task.Run(() => CheckManeuverExecution(node)); //return control to GUI
-
-            return true;
-        }
-
-        //DEVE IR PARA A CLASSE ManeuverController
-        public float CalculateBurnTime()
-        {
-            SendMessage("Calculating Burn time...");
-
-            Node node;
-            if (CurrentVessel.Control.Nodes.Count > 0)
-            {
-                node = CurrentVessel.Control.Nodes[0];
-            }
-            else
-            {
-                SendMessage("No maneuver nodes available!");
-                return 0.0f;
-            }
-
-            float burn_time;
-            double delta_v = node.DeltaV;
-
-            float F = CurrentVessel.AvailableThrust;
-            float Isp = CurrentVessel.SpecificImpulse * CurrentVessel.Orbit.Body.SurfaceGravity; //9.82 in kerbin
-            float m0 = CurrentVessel.Mass;
-            float m1 = m0 / (float)Math.Exp(delta_v / Isp);
-            float flow_rate = F / Isp;
-
-            burn_time = (m0 - m1) / flow_rate;
-
-            SendMessage("Burn time is " + burn_time + " seconds");
-            return burn_time;
-        }
-
-        //DEVE IR PARA A CLASSE ManeuverController
-        //Thread
-        private void CheckManeuverExecution(Node node)
-        {
-            SendMessage("Starting Node Telemetry...");
-
-            _maneuverBurnTime = CalculateBurnTime();
-
-            _flightTelemetry.StartNodeTelemetry();
-            Thread.Sleep(1000);//just wait for streaming to start
-
-            //Go to maneuver, position ship and execute it
-            Task t1 = Task.Run(() => Warp(60.0f, _maneuverBurnTime, node));
-            t1.Wait();
-
-            SendMessage("Maneuver Preparation: positioning ship...");
-
-            TurnOffAutoPilot();
-            Thread.Sleep(1000);
-            CurrentVessel.Control.SASMode = SASMode.Maneuver;
-
-            //Wait until start time
-
-            SendMessage("Waiting burn time...");
-            _maneuverBurnTime = CalculateBurnTime(); //atualiza caso haja correção (normalmente quando orbita de um planeta para outro)
-            //while (node.UT - _flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.UT) > burnTime / 2.0d)
-            while (_flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.NodeTimeTo) > _maneuverBurnTime / 2.0d)
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                Thread.Sleep(250);
-            }
-
-            SendMessage("Executing Maneuver...");
-            _ManeuverStatus = CommonDefs.VesselState.Executing;
-
-            CurrentVessel.Control.Throttle = 1.0f;
-            CurrentVessel.Control.RCS = false;
-
-            double delta_v = node.DeltaV;
-            float acc_burn = (float)delta_v / _maneuverBurnTime;
-
-            //burn until 2 seconds before burning end
-            while (_flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Remaining_DeltaV) > acc_burn / 2.0d)
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                Thread.Sleep(100);
-            }
-
-            SendMessage("Fine tunning...");
-            CurrentVessel.Control.Throttle = 0.1f;
-            CurrentVessel.Control.SASMode = SASMode.StabilityAssist;
-
-            //Stop control
-            var last_delta_v = _flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Remaining_DeltaV);
-            while(true)
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                var rdv = _flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Remaining_DeltaV);
-
-                if (rdv < 0)
-                    break;
-
-                if (rdv <= last_delta_v)
-                    last_delta_v = rdv;
-                else
-                    break;
-            }
-
-            CurrentVessel.Control.Throttle = 0.0f;
-            lock (lock_gate_maneuver)
-            {
-                _ManeuverStatus = CommonDefs.VesselState.Finished;
-            }
-
-            _maneuverBurnTime = 0.0f;
-            SendMessage("Maneuver completed!");
-        }
-
-        //DEVE IR PARA A CLASSE ManeuverController
-        //Thread
-        private void Warp(float fLeadTime, float fBurnTime, Node maneuverNode)
-        {
-            SendMessage("Warping to " + fLeadTime + " seconds before starting maneuver");
-
-            double totalLeadTime = fLeadTime + fBurnTime / 2.0;
-
-            _conn.SpaceCenter().WarpTo(maneuverNode.UT - totalLeadTime);
-
-            while(maneuverNode.UT - _flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.UT) > totalLeadTime)
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                Thread.Sleep(200); //just wait until correct time 
-            }
-
-            SendMessage("Approaching maneuver node...");
         }
     }
 }

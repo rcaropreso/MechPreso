@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using WpfApp1.Utils;
+using WpfApp1.Models;
 
 namespace WpfApp1.ViewModel
 {
@@ -37,8 +38,8 @@ namespace WpfApp1.ViewModel
             {
                 return _connect ?? (_connect = new RelayCommand(x =>
                 {
-                    Mediator.Notify("ClearScreen", "");
-                    Mediator.Notify("Connect", "");
+                    Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
+                    Mediator.Notify(CommonDefs.MSG_CONNECT, "");
                 }));
             }
         }
@@ -49,7 +50,7 @@ namespace WpfApp1.ViewModel
             {
                 return _disconnect ?? (_disconnect = new RelayCommand(x =>
                 {
-                    Mediator.Notify("Disconnect", "");
+                    Mediator.Notify(CommonDefs.MSG_DISCONNECT, "");
                 }));
             }
         }
@@ -77,8 +78,8 @@ namespace WpfApp1.ViewModel
                 return;
             }
 
-            _missionController?.ShipControl?._flightTelemetry?.StopAllTelemetry();
-            Mediator.Notify("StopTimers", "");
+            _missionController?.ShipControl?.Telemetry?.StopAllTelemetry();
+            Mediator.Notify(CommonDefs.MSG_STOP_TIMERS, "");
 
             _connProxy?.CloseConnection();
 
@@ -110,7 +111,7 @@ namespace WpfApp1.ViewModel
 
         public void SendMessage(string strMessage)
         {
-            Mediator.Notify("SendMessage", strMessage.ToString());
+            Mediator.Notify(CommonDefs.MSG_SEND_MESSAGE, strMessage.ToString());
         }
     }
 }

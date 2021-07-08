@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WpfApp1.Services;
 using WpfApp1.Utils;
+using WpfApp1.Models;
 
 namespace WpfApp1.Controllers
 {
@@ -98,7 +99,7 @@ namespace WpfApp1.Controllers
             if (DBG_MESSAGES_ON)
             {
                 Console.WriteLine(strMessage);
-                Mediator.Notify("SendMessage", strMessage);
+                Mediator.Notify(CommonDefs.MSG_SEND_MESSAGE, strMessage);
             }
         }
         #endregion

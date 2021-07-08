@@ -68,12 +68,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controllers\LandingController.cs" />
     <Compile Include="Controllers\PID.cs" />
+    <Compile Include="Controllers\TakeOffController.cs" />
     <Compile Include="MainWindow1.xaml.cs">
       <DependentUpon>MainWindow1.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\CommonDefs.cs" />
     <Compile Include="Models\ManeuverData.cs" />
     <Compile Include="Models\TelemetryData.cs" />
+    <Compile Include="Models\VectorDescriptor.cs" />
     <Compile Include="Services\IAsyncMessageUpdate.cs" />
     <Compile Include="Services\ContractManager.cs" />
     <Compile Include="Services\IMessageComm.cs" />

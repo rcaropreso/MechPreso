@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using WpfApp1.Utils;
+using WpfApp1.Models;
 
 namespace WpfApp1.ViewModel
 {
@@ -126,9 +127,9 @@ namespace WpfApp1.ViewModel
                 return _launch ?? (_launch = new RelayCommand(x =>
                 {
                     _selectedTakeoff.SRBStage = int.Parse(SRBStage ?? "0");
-                    Mediator.Notify("ClearScreen", "");
-                    Mediator.Notify("StartTimers", "");
-                    Mediator.Notify("Launch", _selectedTakeoff);
+                    Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
+                    Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
+                    Mediator.Notify(CommonDefs.MSG_LAUNCH, _selectedTakeoff);
                 }));
             }
         }

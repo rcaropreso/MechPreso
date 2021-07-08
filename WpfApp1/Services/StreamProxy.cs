@@ -10,6 +10,7 @@ using KRPC.Client.Services.SpaceCenter;
 using KRPC.Schema.KRPC;
 using WpfApp1.Services;
 using WpfApp1.Utils;
+using WpfApp1.Models;
 
 namespace WpfApp1
 {
@@ -50,6 +51,7 @@ namespace WpfApp1
         public Stream<double> CurrentSpeedStream { get => _CurrentSpeedStream; }
         public Stream<double> HorizontalSpeedStream { get => _HorizontalSpeedStream; }
         public Stream<double> VerticalSpeedStream { get => _VerticalSpeedStream; }
+        
         public ReferenceFrame CurrentReferenceFrame  { get; }
 
         public Vessel CurrentVessel { get => m_conn.SpaceCenter().ActiveVessel; }
@@ -225,7 +227,7 @@ namespace WpfApp1
         public void SendMessage(string strMessage)
         {
             Console.WriteLine(strMessage);
-            Mediator.Notify("SendMessage", strMessage);
+            Mediator.Notify(CommonDefs.MSG_SEND_MESSAGE, strMessage);
         }
     }
 }

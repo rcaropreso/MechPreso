@@ -505,10 +505,10 @@ namespace WpfApp1
             }
 
             if (_missionController is null || _missionController.ShipControl is null ||
-                _missionController.ShipControl._flightTelemetry is null)
+                _missionController.ShipControl.Telemetry is null)
                 return;
 
-            ReferenceFrame CurrentRefFrame = _missionController.ShipControl._flightTelemetry.CurrentRefFrame;
+            ReferenceFrame CurrentRefFrame = _missionController.ShipControl.Telemetry.CurrentRefFrame;
             Flight flight = _missionController.ShipControl.CurrentVessel.Flight(CurrentRefFrame);
 
             var h = flight.Heading;

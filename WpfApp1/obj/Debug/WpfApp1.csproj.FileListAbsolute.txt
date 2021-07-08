@@ -60,7 +60,6 @@ E:\Dropbox\KSP\csharp\Jebpreso\WpfApp1\obj\Debug\WpfApp1.csproj.CoreCompileInput
 E:\Dropbox\KSP\csharp\Jebpreso\WpfApp1\obj\Debug\WpfApp1.csproj.CopyComplete
 E:\Dropbox\KSP\csharp\Jebpreso\WpfApp1\obj\Debug\WpfApp1.exe
 E:\Dropbox\KSP\csharp\Jebpreso\WpfApp1\obj\Debug\WpfApp1.pdb
-E:\Dropbox\KSP\csharp\MechPreso\WpfApp1\obj\Debug\WpfApp1.csprojAssemblyReference.cache
 E:\Dropbox\KSP\csharp\MechPreso\WpfApp1\obj\Debug\MainWindow.g.cs
 E:\Dropbox\KSP\csharp\MechPreso\WpfApp1\obj\Debug\MainWindow1.g.cs
 E:\Dropbox\KSP\csharp\MechPreso\WpfApp1\obj\Debug\View\Connection.g.cs
@@ -94,3 +93,4 @@ E:\Dropbox\KSP\csharp\MechPreso\WpfApp1\obj\Debug\WpfApp1.Properties.Resources.r
 E:\Dropbox\KSP\csharp\MechPreso\WpfApp1\obj\Debug\WpfApp1.csproj.GenerateResource.cache
 E:\Dropbox\KSP\csharp\MechPreso\WpfApp1\obj\Debug\WpfApp1.csproj.CoreCompileInputs.cache
 E:\Dropbox\KSP\csharp\MechPreso\WpfApp1\obj\Debug\WpfApp1.csproj.CopyComplete
+E:\Dropbox\KSP\csharp\MechPreso\WpfApp1\obj\Debug\WpfApp1.csproj.AssemblyReference.cache

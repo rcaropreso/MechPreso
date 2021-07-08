@@ -9,6 +9,7 @@ using KRPC.Client;
 using KRPC.Client.Services.SpaceCenter;
 using WpfApp1.Services;
 using WpfApp1.Utils;
+using WpfApp1.Models;
 
 namespace WpfApp1
 {
@@ -39,7 +40,7 @@ namespace WpfApp1
         private ReferenceFrame _CurrentRefFrame;
 
         #region Public Methods
-        public FlightTelemetry(Connection conn)
+        public FlightTelemetry(in Connection conn)
         {
             m_conn = conn;
 
@@ -122,7 +123,8 @@ namespace WpfApp1
                 }
             }
             catch(Exception ex) when (ex is System.IO.IOException ||
-                                      ex is System.InvalidOperationException)
+                                      //ex is System.InvalidOperationException ||
+                                      ex is KRPC.Client.RPCException)
             {
                 MethodBase m = MethodBase.GetCurrentMethod();
                 StringBuilder strMessage = new StringBuilder();
@@ -145,27 +147,27 @@ namespace WpfApp1
             StartAllTelemetry();
         }
 
-        public void SetupSRBTelemetry(int iSRBStage)
+        public void StartSRBTelemetry(int iSRBStage)
         {
             m_streamManager.CreateSolidFuelStream(iSRBStage);
         }
 
         public void StartAllTelemetry()
         {
-            m_streamManager.CreateVesselHeadingStream();
-            m_streamManager.CreateVesselPitchStream();
             m_streamManager.CreateApoapsisAltitudeStream();
             m_streamManager.CreatePeriapsisAltitudeStream();
             m_streamManager.CreateSurfaceAltitudeStream();
             m_streamManager.CreateMeanAltitudeStream();
-            m_streamManager.CreateTerminalVelocityStream();
             m_streamManager.CreateUTStream();
+            m_streamManager.CreateTerminalVelocityStream();
+            m_streamManager.CreateVesselPitchStream();
+            m_streamManager.CreateVesselHeadingStream();
             m_streamManager.CreateCurrentSpeedStream();
             m_streamManager.CreateHorizontalSpeedStream();
             m_streamManager.CreateVerticalSpeedStream();
         }
 
-        public void SetupNodeTelemetry()
+        public void StartNodeTelemetry()
         {
             m_streamManager.CreateRemainingDeltaVStream();
             m_streamManager.CreateNodeTimeTo();
@@ -184,46 +186,28 @@ namespace WpfApp1
             var vv        = GetInfo(TelemetryInfo.VerticalSpeed);
             var vh        = GetInfo(TelemetryInfo.HorizontalSpeed);
             float theta   = (float)Math.Atan2(Math.Abs(vv), Math.Abs(vh));//angulo entre o vetor velocidade e a horizontal
-            var alt       = GetInfo(TelemetryInfo.Surface_Altitude);
+            var altitude       = GetInfo(TelemetryInfo.Surface_Altitude);
             //var meanAltitude    = GetInfo(TelemetryInfo.Mean_Altitude);           
 
-            //Estimativa de altitude para inicio da queima vertical  
-            //Considerando a nave na vertical
-            double av = a - g;
-            var verticalBurnStartAltitude = Math.Pow(vv, 2) / (2 * av);
+            //Calcula altura percorrida pelo veiculo durante o cancelamento da velocidade vertical (assumindo a nave na vertical)
+            float av = (float)a - g;
+            var verticalBurnHeight = Math.Pow(vv, 2) / (2 * av);
 
-            //Estimativa de altitude para inicio de queima de cancelamento de velocidade horizontal
-            //Altura da queda enquanto cancela a velocidade horizontal
-            float thetaEq = (float)Math.Asin(g / a);
-            var th = vh / (a * Math.Cos(thetaEq));
-
-            //O angulo thetaEq deveria cancelar a gravidade, portanto a queda é MU (Movimento Uniforme)
-            //var v0 = Math.Abs(vv); //velocidade vertical apos th segundos, em thetaEq a vh nao deveria mudar
-            //var dh = v0 * th;
-            //var horizontalBurnStartAltitude = verticalBurnStartAltitude + dh;            
-
-            //TESTE 28/08/2020 - BEGIN
-            //Calcula altura de inicio da queima puramente horizontal
-            //float v_htarget = 0.0f;
-            //float v_hnow = (float)vh;
-            //float v_vnow = (float)vv;
-            //float ar = (float)a - g;
-            //float ah = (float) a;
-            //float t_burn = Math.Abs((v_htarget - v_hnow) / ah);
-            //float y_now = (float)(Math.Pow((v_vnow + (-g) * t_burn), 2) / (2 * ar) - v_vnow * t_burn - 0.5 * (-g) * Math.Pow(t_burn, 2));
-
-            //Calcula altura de inicio da queima mantendo velocidade vertical constante
-            float v_htarget = 0.0f;//(float)vv;
-            float v_hnow = (float)vh;
-            float v_vnow = (float)vv;
-            float ar = (float)a - g;
+            //Calcula altura percorrida pelo veiculo durante o cancelamento da velocidade horizontal (assumindo a nave na horizontal)
             float ah = (float) (a * Math.Cos(theta));
+            float t_burn = Math.Abs((float)vh / ah); //Tempo para zerar velocidade horizontal
+            float horizontalBurnHeight = (float)( Math.Abs(vv) * t_burn + g * t_burn * t_burn * 0.5); //
 
-            float t_burn = Math.Abs((v_htarget - v_hnow) / ah);
-            float y_now = (float)(Math.Pow(v_vnow, 2) / (2 * ar) - v_vnow * t_burn);
-            //TESTE 28/08/2020 - END
+            //Verificar os seguintes parametros: https://krpc.github.io/krpc/csharp/api/space-center/auto-pilot.html#property-KRPC.Client.Services.SpaceCenter.AutoPilot.SASMode
+            //DecelerationTime { get; set; }
+            //StoppingTime { get; set; }
 
-            SuicideBurnData data = new SuicideBurnData(v, a, vv, vh, alt, theta * 180 / Math.PI, verticalBurnStartAltitude, y_now, g);
+            //Obtem maior altitude do corpo onde está pousando
+            Vessel currentVessel = m_conn?.SpaceCenter().ActiveVessel;
+            string bodyName = currentVessel.Orbit.Body.Name.ToLower();
+            var planetData = PlanetData.DateFromBody[bodyName];
+
+            SuicideBurnData data = new SuicideBurnData(v, a, vv, vh, altitude, theta * 180 / Math.PI, verticalBurnHeight, horizontalBurnHeight, planetData.MaxHeight, g);
 
             return data;
         }
@@ -315,7 +299,7 @@ namespace WpfApp1
         public void SendMessage(string strMessage)
         {
             Console.WriteLine(strMessage);
-            Mediator.Notify("SendMessage", strMessage);
+            Mediator.Notify(CommonDefs.MSG_SEND_MESSAGE, strMessage);
         }
         #endregion
     }

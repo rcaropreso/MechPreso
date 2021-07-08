@@ -215,23 +215,28 @@ namespace WpfApp1.ViewModel
 
 
             //Cadastro das mensagens e tópicos gerenciadas pelo Mediator
-            Mediator.Subscribe("ClearScreen", OnClearScreen);
-            Mediator.Subscribe("SendMessage", OnSendMessage);
-            Mediator.Subscribe("Connect",     OnConnect);
-            Mediator.Subscribe("Disconnect",  OnDisconnect);
-            Mediator.Subscribe("StartTimers", OnStartTimers); //Talvez nao precise inscrever este aqui
-            Mediator.Subscribe("StopTimers",  OnStopTimers);
+            Mediator.Subscribe(CommonDefs.MSG_CLEAR_SCREEN, OnClearScreen);
+            Mediator.Subscribe(CommonDefs.MSG_SEND_MESSAGE, OnSendMessage);
+            Mediator.Subscribe(CommonDefs.MSG_CONNECT,     OnConnect);
+            Mediator.Subscribe(CommonDefs.MSG_DISCONNECT,  OnDisconnect);
+            Mediator.Subscribe(CommonDefs.MSG_START_TIMERS, OnStartTimers); //Talvez nao precise inscrever este aqui
+            Mediator.Subscribe(CommonDefs.MSG_STOP_TIMERS,  OnStopTimers);
 
-            Mediator.Subscribe("Launch", OnExecuteTakeoff);
+            Mediator.Subscribe(CommonDefs.MSG_LAUNCH, OnExecuteTakeoff);
 
-            Mediator.Subscribe("ExecuteManeuver", OnExecuteManeuver);
-            Mediator.Subscribe("Circularize",     OnCircularize);
+            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_MANEUVER, OnExecuteManeuver);
+            Mediator.Subscribe(CommonDefs.MSG_CIRCULARIZE,      OnCircularize);
 
-            Mediator.Subscribe("ExecuteSuicideBurn", OnExecuteSuicideBurn);
+            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_SUICIDE_BURN, OnExecuteSuicideBurn);
+            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_CANCEL_VVEL,  OnExecuteCancelVVel);
+            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_CANCEL_HVEL, OnExecuteCancelHVel);
+            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_DEORBIT_BODY, OnExecuteDeorbitBody);
+            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_STOP_BURN, OnExecuteStopBurn);
+            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_FINE_TUNNING, OnExecuteFineTunning);
 
-            Mediator.Subscribe("NoneScreen",    OnNoneScreen);
-            Mediator.Subscribe("TakeoffScreen", OnTakeoffScreen);
-            Mediator.Subscribe("LandingScreen", OnLandingScreen);
+            Mediator.Subscribe(CommonDefs.MSG_NONE_SCREEN,    OnNoneScreen);
+            Mediator.Subscribe(CommonDefs.MSG_TAKEOFF_SCREEN, OnTakeoffScreen);
+            Mediator.Subscribe(CommonDefs.MSG_LANDING_SCREEN, OnLandingScreen);
         }
 
         private void OnStartTimers(object obj)
@@ -274,13 +279,13 @@ namespace WpfApp1.ViewModel
 
         private void OnTimedEventSuicideBurnTelemetry(Object source, ElapsedEventArgs e)
         {
-            if (_missionController?.ShipControl.SuicideBurnStatus == ShipFlighter.VesselState.Finished)
+            if (_missionController?.ShipControl.SuicideBurnStatus == CommonDefs.VesselState.Finished)
             {
                 return;
             }
 
             //Update GUI
-            SuicideBurnData data = _missionController?.ShipControl?._flightTelemetry?.GetSuicideBurnTelemetryInfo();
+            SuicideBurnData data = _missionController?.ShipControl?.Telemetry?.GetSuicideBurnTelemetryInfo();
 
             if (App.Current == null || data == null)//avoid crashes on application close by now
             {
@@ -292,26 +297,26 @@ namespace WpfApp1.ViewModel
 
         private void OnTimedEventTelemetry(Object source, ElapsedEventArgs e)
         {
-            if (_missionController?.ShipControl.TakeOffStatus == ShipFlighter.VesselState.Finished)
+            if (_missionController?.ShipControl.TakeOffStatus == CommonDefs.VesselState.Finished)
             {
                 _telemetryTimer.Stop();
                 return;
             }
 
             //Update GUI
-            double _vesselHeading    = _missionController.ShipControl._flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.VesselHeading);
-            double _vesselPitch      = _missionController.ShipControl._flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.VesselPitch);
-            double _surfaceAltitude  = _missionController.ShipControl._flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Surface_Altitude);
-            double _srbFuel          = _missionController.ShipControl._flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.SRB_Fuel);
-            double _apoapsisAltitude = _missionController.ShipControl._flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Apoapsis_Altitude);
-            double _terminalVelocity = _missionController.ShipControl._flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Terminal_Velocity);
+            double _vesselHeading    = _missionController.ShipControl.Telemetry.GetInfo(FlightTelemetry.TelemetryInfo.VesselHeading);
+            double _vesselPitch      = _missionController.ShipControl.Telemetry.GetInfo(FlightTelemetry.TelemetryInfo.VesselPitch);
+            double _surfaceAltitude  = _missionController.ShipControl.Telemetry.GetInfo(FlightTelemetry.TelemetryInfo.Surface_Altitude);
+            double _srbFuel          = _missionController.ShipControl.Telemetry.GetInfo(FlightTelemetry.TelemetryInfo.SRB_Fuel);
+            double _apoapsisAltitude = _missionController.ShipControl.Telemetry.GetInfo(FlightTelemetry.TelemetryInfo.Apoapsis_Altitude);
+            double _terminalVelocity = _missionController.ShipControl.Telemetry.GetInfo(FlightTelemetry.TelemetryInfo.Terminal_Velocity);
 
-            double _currentSpeed    = _missionController.ShipControl._flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.CurrentSpeed);
-            double _verticalSpeed   = _missionController.ShipControl._flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.VerticalSpeed);
-            double _horizontalSpeed = _missionController.ShipControl._flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.HorizontalSpeed);
+            double _currentSpeed    = _missionController.ShipControl.Telemetry.GetInfo(FlightTelemetry.TelemetryInfo.CurrentSpeed);
+            double _verticalSpeed   = _missionController.ShipControl.Telemetry.GetInfo(FlightTelemetry.TelemetryInfo.VerticalSpeed);
+            double _horizontalSpeed = _missionController.ShipControl.Telemetry.GetInfo(FlightTelemetry.TelemetryInfo.HorizontalSpeed);
 
-            double _engineAcc = _missionController.ShipControl._flightTelemetry.GetEngineAcceleration();
-            double _gravity   = _missionController.ShipControl._flightTelemetry.GetGravity();
+            double _engineAcc = _missionController.ShipControl.Telemetry.GetEngineAcceleration();
+            double _gravity   = _missionController.ShipControl.Telemetry.GetGravity();
 
             TelemetryData _data = new TelemetryData(_vesselHeading, _vesselPitch, _surfaceAltitude, _srbFuel,
                 _apoapsisAltitude, _terminalVelocity, _currentSpeed, _verticalSpeed, 
@@ -335,20 +340,20 @@ namespace WpfApp1.ViewModel
 
             switch (_missionController.ShipControl.ManeuverStatus)
             {
-                case ShipFlighter.VesselState.Preparation:
-                case ShipFlighter.VesselState.Executing:
+                case CommonDefs.VesselState.Preparation:
+                case CommonDefs.VesselState.Executing:
                     _maneuverBurnTime = _missionController.ShipControl.ManeuverBurnTime;
                     break;
 
-                case ShipFlighter.VesselState.Finished:
+                case CommonDefs.VesselState.Finished:
                     _maneuverTimer.Stop();
                     _maneuverBurnTime = 0;
                     return;
             }
 
             //Update GUI
-            double NodeTimeTo      = _missionController.ShipControl._flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.NodeTimeTo);
-            double RemainingDeltaV = _missionController.ShipControl._flightTelemetry.GetInfo(FlightTelemetry.TelemetryInfo.Remaining_DeltaV);
+            double NodeTimeTo      = _missionController.ShipControl.Telemetry.GetInfo(FlightTelemetry.TelemetryInfo.NodeTimeTo);
+            double RemainingDeltaV = _missionController.ShipControl.Telemetry.GetInfo(FlightTelemetry.TelemetryInfo.Remaining_DeltaV);
 
             if (App.Current == null)//avoid crashes on application close by now
             {
@@ -390,7 +395,7 @@ namespace WpfApp1.ViewModel
 
             ManeuverData _data1    = new ManeuverData(0, 0, 0);
             TelemetryData _data2   = new TelemetryData(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-            SuicideBurnData _data3 = new SuicideBurnData(0, 0, 0, 0, 0, 0, 0, 0, 0);
+            SuicideBurnData _data3 = new SuicideBurnData(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
             ((ManeuverViewModel)_maneuverViewModel).SafeUpdateManeuverText(_data1);
             ((TelemetryViewModel)_telemetryViewModel).SafeUpdateTelemetryText(_data2);
@@ -444,6 +449,76 @@ namespace WpfApp1.ViewModel
             _missionController?.PlanCircularization(reduceOrbit);
         }
 
+        private void OnExecuteDeorbitBody(object obj)
+        {
+            if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
+                return;
+
+            OnSendMessage("Starting Maneuver...");
+
+            SuicideBurnSetup _sbSetup = (SuicideBurnSetup)obj;
+
+            _missionController?.ResetManualControl();
+
+            Task.Run(() => AsyncExecuteDeorbitBody(_sbSetup));
+        }
+
+        private void OnExecuteCancelVVel(object obj)
+        {
+            if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
+                return;
+
+            SuicideBurnSetup _sbSetup = (SuicideBurnSetup)obj;
+
+            OnSendMessage("Starting Maneuver...");
+
+            _missionController?.ResetManualControl();
+
+            Task.Run(() => AsyncExecuteCancelVVel(_sbSetup));
+        }
+
+        private void OnExecuteCancelHVel(object obj)
+        {
+            if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
+                return;
+
+            SuicideBurnSetup _sbSetup = (SuicideBurnSetup)obj;
+
+            OnSendMessage("Starting Maneuver...");
+
+            _missionController?.ResetManualControl();
+
+            Task.Run(() => AsyncExecuteCancelHVel(_sbSetup));
+        }
+
+        private void OnExecuteStopBurn(object obj)
+        {
+            if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
+                return;
+
+            OnSendMessage("Starting Maneuver...");
+
+            SuicideBurnSetup _sbSetup = (SuicideBurnSetup)obj;
+
+            _missionController?.ResetManualControl();
+
+            Task.Run(() => AsyncExecuteStopBurn(_sbSetup));
+        }
+
+        private void OnExecuteFineTunning(object obj)
+        {
+            if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
+                return;
+
+            OnSendMessage("Starting Maneuver...");
+
+            SuicideBurnSetup _sbSetup = (SuicideBurnSetup)obj;
+
+            _missionController?.ResetManualControl();
+
+            Task.Run(() => AsyncExecuteFineTunning(_sbSetup));
+        }
+
         private void OnExecuteSuicideBurn(object obj)
         {
             if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
@@ -456,6 +531,41 @@ namespace WpfApp1.ViewModel
             _missionController?.ResetManualControl();
 
             Task.Run(() => AsyncExecuteSuicideBurn(_sbSetup));
+        }
+
+        private void AsyncExecuteDeorbitBody(SuicideBurnSetup _sbSetup)
+        {
+            _missionController?.ExecuteDeorbitBody(_sbSetup);
+            _maneuverBurnTime = 0;
+            OnStopTimers("");
+        }
+
+        private void AsyncExecuteCancelVVel(SuicideBurnSetup _sbSetup)
+        {
+            _missionController?.ExecuteCancelVVel(_sbSetup);
+            _maneuverBurnTime = 0;
+            OnStopTimers("");
+        }
+
+        private void AsyncExecuteCancelHVel(SuicideBurnSetup _sbSetup)
+        {
+            _missionController?.ExecuteCancelHVel(_sbSetup);
+            _maneuverBurnTime = 0;
+            OnStopTimers("");
+        }
+
+        private void AsyncExecuteStopBurn(SuicideBurnSetup _sbSetup)
+        {
+            _missionController?.ExecuteStopBurn(_sbSetup);
+            _maneuverBurnTime = 0;
+            OnStopTimers("");
+        }
+
+        private void AsyncExecuteFineTunning(SuicideBurnSetup _sbSetup)
+        {
+            _missionController?.ExecuteFineTunning(_sbSetup);
+            _maneuverBurnTime = 0;
+            OnStopTimers("");
         }
 
         private void AsyncExecuteSuicideBurn(SuicideBurnSetup _sbSetup)
