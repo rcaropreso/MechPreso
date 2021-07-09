@@ -132,7 +132,7 @@ namespace WpfApp1.Controllers
 
             _maneuverBurnTime = CalculateBurnTime();
 
-            _flightTelemetry.StartNodeTelemetry();
+            _flightTelemetry.RestartTelemetry(false, true);
             Thread.Sleep(1000);//just wait for streaming to start
 
             //Go to maneuver, position ship and execute it

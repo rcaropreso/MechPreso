@@ -39,6 +39,11 @@ namespace WpfApp1
         private StreamProxy m_streamManager;
         private ReferenceFrame _CurrentRefFrame;
 
+
+        private bool m_bIsBaseTelemetryOn;
+        private bool m_bIsNodeTelemetryOn; 
+        private bool m_bIsSRBTelemetryOn;
+
         #region Public Methods
         public FlightTelemetry(in Connection conn)
         {
@@ -62,59 +67,101 @@ namespace WpfApp1
                 switch (infoType)
                 {
                     case TelemetryInfo.Apoapsis_Altitude:
-                        returnValue = m_streamManager?.ApoapsisAltitudeStream?.Get();
+                        if (m_bIsBaseTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.ApoapsisAltitudeStream?.Get();
+                        }
                         break;
 
                     case TelemetryInfo.Periapsis_Altitude:
-                        returnValue = m_streamManager?.PeriapsisAltitudeStream?.Get();
+                        if (m_bIsBaseTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.PeriapsisAltitudeStream?.Get();
+                        }
                         break;
 
                     case TelemetryInfo.Surface_Altitude:
-                        returnValue = m_streamManager?.SurfaceAltitudeStream?.Get();
+                        if (m_bIsBaseTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.SurfaceAltitudeStream?.Get();
+                        }
                         break;
 
                     case TelemetryInfo.Mean_Altitude:
-                        returnValue = m_streamManager?.MeanAltitudeStream?.Get();
-                        break;
-
-                    case TelemetryInfo.UT:
-                        returnValue = m_streamManager?.UTStream?.Get();
-                        break;
-
-                    case TelemetryInfo.SRB_Fuel:
-                        returnValue = m_streamManager?.SRBFuelStream?.Get();
-                        break;
-
-                    case TelemetryInfo.Remaining_DeltaV:
-                        returnValue = m_streamManager?.RemainingDeltaVStream?.Get();
+                        if (m_bIsBaseTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.MeanAltitudeStream?.Get();
+                        }
                         break;
 
                     case TelemetryInfo.Terminal_Velocity:
-                        returnValue = m_streamManager?.TerminalVelocityStream?.Get();
+                        if (m_bIsBaseTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.TerminalVelocityStream?.Get();
+                        }
                         break;
 
                     case TelemetryInfo.VesselHeading:
-                        returnValue = m_streamManager?.VesselHeadingStream?.Get();
+                        if (m_bIsBaseTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.VesselHeadingStream?.Get();
+                        }
                         break;
 
                     case TelemetryInfo.VesselPitch:
-                        returnValue = m_streamManager?.VesselPitchStream?.Get();
-                        break;
-
-                    case TelemetryInfo.NodeTimeTo:
-                        returnValue = m_streamManager?.NodeTimeTo?.Get();
+                        if (m_bIsBaseTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.VesselPitchStream?.Get();
+                        }
                         break;
 
                     case TelemetryInfo.CurrentSpeed:
-                        returnValue = m_streamManager?.CurrentSpeedStream?.Get();
+                        if (m_bIsBaseTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.CurrentSpeedStream?.Get();
+                        }
                         break;
 
                     case TelemetryInfo.HorizontalSpeed:
-                        returnValue = m_streamManager?.HorizontalSpeedStream?.Get();
+                        if (m_bIsBaseTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.HorizontalSpeedStream?.Get();
+                        }
                         break;
 
                     case TelemetryInfo.VerticalSpeed:
-                        returnValue = m_streamManager?.VerticalSpeedStream?.Get();
+                        if (m_bIsBaseTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.VerticalSpeedStream?.Get();
+                        }
+                        break;
+
+                    case TelemetryInfo.UT:
+                        if (m_bIsNodeTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.UTStream?.Get();
+                        }
+                        break;
+
+                    case TelemetryInfo.Remaining_DeltaV:
+                        if (m_bIsNodeTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.RemainingDeltaVStream?.Get();
+                        }
+                        break;
+
+                    case TelemetryInfo.NodeTimeTo:
+                        if (m_bIsNodeTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.NodeTimeTo?.Get();
+                        }
+                        break;
+
+                    case TelemetryInfo.SRB_Fuel:
+                        if (m_bIsSRBTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.SRBFuelStream?.Get();
+                        }
                         break;
 
                     default:
@@ -123,7 +170,7 @@ namespace WpfApp1
                 }
             }
             catch(Exception ex) when (ex is System.IO.IOException ||
-                                      //ex is System.InvalidOperationException ||
+                                      ex is System.InvalidOperationException ||
                                       ex is KRPC.Client.RPCException)
             {
                 MethodBase m = MethodBase.GetCurrentMethod();
@@ -136,7 +183,7 @@ namespace WpfApp1
             return returnValue ?? -1.0d;
         }
 
-        public void RestartTelemetry()
+        public void RestartTelemetry(bool basicTelemetryOn, bool nodeTelemetryOn)
         {
             StopAllTelemetry();
 
@@ -144,49 +191,69 @@ namespace WpfApp1
             _CurrentRefFrame = ReferenceFrame.CreateHybrid(m_conn, currentVessel.Orbit.Body.ReferenceFrame, currentVessel.SurfaceReferenceFrame);
             m_streamManager = new StreamProxy(m_conn, CurrentRefFrame);
 
-            StartAllTelemetry();
+            if (basicTelemetryOn)
+            {
+                StartBasicTelemetry();
+            }
+
+            if (nodeTelemetryOn)
+            {
+                StartNodeTelemetry();
+            }
         }
 
-        public void StartSRBTelemetry(int iSRBStage)
+        public void StopAllTelemetry()
         {
-            m_streamManager.CreateSolidFuelStream(iSRBStage);
+            m_bIsBaseTelemetryOn = m_bIsNodeTelemetryOn = m_bIsSRBTelemetryOn = false;
+            Mediator.Notify(CommonDefs.MSG_STOP_TIMERS, "");//envia mensagem para a GUI parar de monitorar o stream
+            Thread.Sleep(250);
+            m_streamManager.RemoveStreams();
         }
 
-        public void StartAllTelemetry()
+        public void StartBasicTelemetry()
         {
             m_streamManager.CreateApoapsisAltitudeStream();
             m_streamManager.CreatePeriapsisAltitudeStream();
             m_streamManager.CreateSurfaceAltitudeStream();
             m_streamManager.CreateMeanAltitudeStream();
-            m_streamManager.CreateUTStream();
             m_streamManager.CreateTerminalVelocityStream();
             m_streamManager.CreateVesselPitchStream();
             m_streamManager.CreateVesselHeadingStream();
             m_streamManager.CreateCurrentSpeedStream();
             m_streamManager.CreateHorizontalSpeedStream();
             m_streamManager.CreateVerticalSpeedStream();
+
+            m_bIsBaseTelemetryOn = true;
+        }
+
+        public void StartSRBTelemetry(int iSRBStage)
+        {
+            m_streamManager.CreateSolidFuelStream(iSRBStage);
+            m_bIsSRBTelemetryOn = true;
         }
 
         public void StartNodeTelemetry()
         {
             m_streamManager.CreateRemainingDeltaVStream();
             m_streamManager.CreateNodeTimeTo();
-        }
-
-        public void StopAllTelemetry()
-        {
-            m_streamManager.RemoveStreams();
+            m_streamManager.CreateUTStream();
+            m_bIsNodeTelemetryOn = true;
         }
 
         public SuicideBurnData GetSuicideBurnTelemetryInfo() //poderia fazer um takeoffTelemetryInfo
         {
+            if(!m_bIsBaseTelemetryOn) //telemetria desligada
+            {
+                return new SuicideBurnData(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            }
+
             var g         = GetGravity();
             var a         = GetEngineAcceleration();
             var v         = GetInfo(TelemetryInfo.CurrentSpeed);
             var vv        = GetInfo(TelemetryInfo.VerticalSpeed);
             var vh        = GetInfo(TelemetryInfo.HorizontalSpeed);
             float theta   = (float)Math.Atan2(Math.Abs(vv), Math.Abs(vh));//angulo entre o vetor velocidade e a horizontal
-            var altitude       = GetInfo(TelemetryInfo.Surface_Altitude);
+            var altitude  = GetInfo(TelemetryInfo.Surface_Altitude);
             //var meanAltitude    = GetInfo(TelemetryInfo.Mean_Altitude);           
 
             //Calcula altura percorrida pelo veiculo durante o cancelamento da velocidade vertical (assumindo a nave na vertical)

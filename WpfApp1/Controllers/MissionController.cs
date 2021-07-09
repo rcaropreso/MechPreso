@@ -41,9 +41,9 @@ namespace WpfApp1
             }
         }
 
-        public void RestartTelemetry()
+        public void RestartTelemetry(bool basicTelemetryOn, bool nodeTelemetryOn)
         {
-            ShipControl.RestartTelemetry();
+            ShipControl.RestartTelemetry(basicTelemetryOn, nodeTelemetryOn);
         }
 
         public void StopAllTelemetry(bool bClearScreen=true)
@@ -58,6 +58,8 @@ namespace WpfApp1
 
         public void SetManualControl()
         {
+            SendMessage("Setting control to manual...");
+
             ShipControl.SetManualControl();
 
             lock (lock_gate_manual)
@@ -65,19 +67,47 @@ namespace WpfApp1
                 _manualControl = true;
             }
 
-            StopAllTelemetry();
+            SendMessage("Control was set to manual.");
+
+            StopAllTelemetry(false);
         }
 
         public void PlanCircularization(bool bReduce = false)
         {
+            //Restart Telemetry
+            RestartTelemetry(false, true);
+
             ShipControl.PlanCircularization(bReduce);
+        }
+
+        //This method is synchronous
+        public void ExecuteManeuverNode()
+        {
+            RestartTelemetry(false, true);
+            Thread.Sleep(1000);
+
+            SendMessage("Executing Maneuver Node...");
+
+            bool bRet = ShipControl.ExecuteManeuverNode();
+
+            SendMessage("Waiting Maneuver Node to end...");
+            while (ShipControl.ManeuverStatus != CommonDefs.VesselState.Finished)
+            {
+                if (ReturnToManualControl())
+                    return;
+
+                Thread.Sleep(1000);
+            }
+            SendMessage("Maneuver Node has ended.");
+
+            StopAllTelemetry();
         }
 
         //This method is synchronous
         public void ExecuteTakeOff(TakeOffDescriptor _tod)
         {
             //Restart Telemetry
-            RestartTelemetry();
+            RestartTelemetry(true, true);
 
             //Fazer contagem regressiva e ligar a nave
             for (int i = 3; i >= 0; i--)
@@ -110,7 +140,7 @@ namespace WpfApp1
         //This method is synchronous
         public void ExecuteDeorbitBody(SuicideBurnSetup suicideBurnSetup)
         {
-            RestartTelemetry();
+            RestartTelemetry(true, false);
             Thread.Sleep(1000);
 
             SendMessage("Deorbiting body...");
@@ -133,7 +163,7 @@ namespace WpfApp1
         //This method is synchronous
         public void ExecuteCancelVVel(SuicideBurnSetup suicideBurnSetup)
         {
-            RestartTelemetry();
+            RestartTelemetry(true, false);
             Thread.Sleep(1000);
 
             SendMessage("Cancelling Vertical Velocity...");
@@ -155,7 +185,7 @@ namespace WpfApp1
 
         public void ExecuteCancelHVel(SuicideBurnSetup suicideBurnSetup)
         {
-            RestartTelemetry();
+            RestartTelemetry(true, false);
             Thread.Sleep(1000);
 
             SendMessage("Cancelling Horizontal Velocity...");
@@ -177,7 +207,7 @@ namespace WpfApp1
 
         public void ExecuteStopBurn(SuicideBurnSetup suicideBurnSetup)
         {
-            RestartTelemetry();
+            RestartTelemetry(true, false);
             Thread.Sleep(1000);
 
             SendMessage("Stop burn...");
@@ -199,7 +229,7 @@ namespace WpfApp1
 
         public void ExecuteFineTunning(SuicideBurnSetup suicideBurnSetup)
         {
-            RestartTelemetry();
+            RestartTelemetry(true, false);
             Thread.Sleep(1000);
 
             SendMessage("Fine tunning...");
@@ -222,7 +252,7 @@ namespace WpfApp1
         //This method is synchronous
         public void ExecuteSuicideBurn(SuicideBurnSetup suicideBurnSetup)
         {
-            RestartTelemetry();
+            RestartTelemetry(true, false);
             Thread.Sleep(1000);
 
             SendMessage("Executing Suicide Burn...");
@@ -240,29 +270,6 @@ namespace WpfApp1
 
             SendMessage("Suicide Burn has ended.");
             StopAllTelemetry(false);
-        }
-
-        //This method is synchronous
-        public void ExecuteManeuverNode()
-        {
-            RestartTelemetry();
-            Thread.Sleep(1000);
-
-            SendMessage("Executing Maneuver Node...");
-
-            bool bRet = ShipControl.ExecuteManeuverNode();
-
-            SendMessage("Waiting Maneuver Node to end...");
-            while (ShipControl.ManeuverStatus != CommonDefs.VesselState.Finished)
-            {
-                if (ReturnToManualControl())
-                    return;
-
-                Thread.Sleep(1000);
-            }
-            SendMessage("Maneuver Node has ended.");
-
-            StopAllTelemetry();
         }
 
         public void SendMessage(string strMessage)

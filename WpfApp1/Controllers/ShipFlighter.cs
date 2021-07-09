@@ -44,7 +44,7 @@ namespace WpfApp1
             _flightTelemetry = new FlightTelemetry(in conn);
 
             SendMessage("Starting Telemetry...");
-            _flightTelemetry?.StartAllTelemetry();
+            _flightTelemetry?.StartBasicTelemetry();
             Thread.Sleep(2000);
             SendMessage("Telemetry has started.");
 
@@ -68,9 +68,9 @@ namespace WpfApp1
             _maneuverController.ResetManualControl();
         }
 
-        public void RestartTelemetry()
+        public void RestartTelemetry(bool basicTelemetryOn, bool nodeTelemetryOn)
         {
-            _flightTelemetry.RestartTelemetry();
+            _flightTelemetry.RestartTelemetry(basicTelemetryOn, nodeTelemetryOn);
         }
 
         public void StopAllTelemetry()

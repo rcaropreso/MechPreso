@@ -120,7 +120,6 @@ namespace WpfApp1.ViewModel
                     if (((ConnectionViewModel)_connectionViewModel).HasValidData())
                     {
                         _missionController.SetManualControl();
-                        SetEventLogMessage("Setting control to manual...");
                     }
                 }));
             }
@@ -281,18 +280,20 @@ namespace WpfApp1.ViewModel
         {
             if (_missionController?.ShipControl.SuicideBurnStatus == CommonDefs.VesselState.Finished)
             {
+                _suicideBurnTimer.Stop();
                 return;
             }
 
             //Update GUI
-            SuicideBurnData data = _missionController?.ShipControl?.Telemetry?.GetSuicideBurnTelemetryInfo();
+            SuicideBurnData _data = _missionController?.ShipControl?.Telemetry?.GetSuicideBurnTelemetryInfo();
 
-            if (App.Current == null || data == null)//avoid crashes on application close by now
+            if (App.Current == null)//avoid crashes on application close by now
             {
+                _suicideBurnTimer.Enabled = false;
                 return;
             }
 
-            ((SuicideBurnViewModel)_suicideBurnViewModel).SafeUpdateSuicideBurnText(data);
+            ((SuicideBurnViewModel)_suicideBurnViewModel).SafeUpdateSuicideBurnText(_data);
         }       
 
         private void OnTimedEventTelemetry(Object source, ElapsedEventArgs e)
@@ -322,7 +323,7 @@ namespace WpfApp1.ViewModel
                 _apoapsisAltitude, _terminalVelocity, _currentSpeed, _verticalSpeed, 
                 _horizontalSpeed, _engineAcc, _gravity);
 
-            if (App.Current == null)//avoid crashes on application close by now
+            if (App.Current == null || _data == null)//avoid crashes on application close by now
             {
                 _telemetryTimer.Enabled = false;
                 return;
