@@ -12,6 +12,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
+//Para tratar o OnClose da janela principal
+using Microsoft.Xaml.Behaviors; //https://stackoverflow.com/questions/8360209/how-to-add-system-windows-interactivity-to-project
+
+
 namespace WpfApp1
 {
     /// <summary>

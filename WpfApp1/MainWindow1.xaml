@@ -4,10 +4,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfApp1"
-        xmlns:view ="clr-namespace:WpfApp1.View"
+        xmlns:view ="clr-namespace:WpfApp1.View" xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
         Title="MechPreso - Controle de Missões para KSP v1.0" Height="450" Width="810">
 
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <i:InvokeCommandAction Command="{Binding CloseWindowCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    
     <Grid ShowGridLines="false">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="260"/>

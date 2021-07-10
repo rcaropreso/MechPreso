@@ -29,6 +29,7 @@ namespace WpfApp1.ViewModel
         private MissionController _missionController;
 
         private string _selectedView; //nome da view selecionada (mesmo nome do Radio Button da mainWindow)
+        private ICommand _closeWindowCommand;
         private ICommand _viewSelector;
         private ICommand _copyLog;
         private ICommand _manualControl;
@@ -86,6 +87,22 @@ namespace WpfApp1.ViewModel
                         break;
                 }
             }
+        }
+
+        public ICommand CloseWindowCommand //associado ao close da janela (botao "X")
+        {
+            get
+            {
+                return _closeWindowCommand ?? (_closeWindowCommand = new RelayCommand(x =>
+                {
+                    this.OnCloseWindow();
+                }));
+            }
+        }
+
+        private void OnCloseWindow()
+        {
+            ((ConnectionViewModel)_connectionViewModel).OnDisconnect();
         }
 
         public ICommand ViewSelector //associado aos Radio Buttons da main window
