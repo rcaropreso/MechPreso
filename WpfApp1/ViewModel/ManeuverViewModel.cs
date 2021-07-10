@@ -59,7 +59,7 @@ namespace WpfApp1.ViewModel
                 return _circularize ?? (_circularize = new RelayCommand(x =>
                 {                    
                     Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
+                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
                     Mediator.Notify(CommonDefs.MSG_CIRCULARIZE, _reduceOrbit);
                 }));
             }
@@ -72,7 +72,7 @@ namespace WpfApp1.ViewModel
                 return _executeManeuver ?? (_executeManeuver = new RelayCommand(x =>
                 {                    
                     Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
+                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
                     Mediator.Notify(CommonDefs.MSG_EXECUTE_MANEUVER, "");
                 }));
             }

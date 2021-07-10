@@ -128,7 +128,7 @@ namespace WpfApp1.ViewModel
                 {
                     _selectedTakeoff.SRBStage = int.Parse(SRBStage ?? "0");
                     Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
+                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
                     Mediator.Notify(CommonDefs.MSG_LAUNCH, _selectedTakeoff);
                 }));
             }

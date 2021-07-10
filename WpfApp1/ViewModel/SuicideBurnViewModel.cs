@@ -113,7 +113,7 @@ namespace WpfApp1.ViewModel
                     };
 
                     Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
+                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
                     Mediator.Notify(CommonDefs.MSG_EXECUTE_SUICIDE_BURN, _sbSetup);
                 }));
             }
@@ -134,7 +134,7 @@ namespace WpfApp1.ViewModel
                     };
 
                     Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
+                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
                     Mediator.Notify(CommonDefs.MSG_EXECUTE_DEORBIT_BODY, _sbSetup);
                 }));
             }
@@ -155,7 +155,7 @@ namespace WpfApp1.ViewModel
                     };
 
                     Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
+                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
                     Mediator.Notify(CommonDefs.MSG_EXECUTE_CANCEL_VVEL, _sbSetup);
                 }));
             }
@@ -176,7 +176,7 @@ namespace WpfApp1.ViewModel
                     };
 
                     Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
+                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
                     Mediator.Notify(CommonDefs.MSG_EXECUTE_CANCEL_HVEL, _sbSetup);
                 }));
             }
@@ -197,7 +197,7 @@ namespace WpfApp1.ViewModel
                     };
 
                     Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
+                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
                     Mediator.Notify(CommonDefs.MSG_EXECUTE_STOP_BURN, _sbSetup);
                 }));
             }
@@ -218,7 +218,7 @@ namespace WpfApp1.ViewModel
                     };
 
                     Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
+                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
                     Mediator.Notify(CommonDefs.MSG_EXECUTE_FINE_TUNNING, _sbSetup);
                 }));
             }

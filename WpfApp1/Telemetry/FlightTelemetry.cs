@@ -200,13 +200,19 @@ namespace WpfApp1
             {
                 StartNodeTelemetry();
             }
+
+            //Por enquanto o evento de timer nao está separado para cada tipo de timer ou telemetria, entao temos que ligar todos
+            Thread.Sleep(1000);
+            Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");//envia mensagem para a GUI voltar a monitorar o stream
         }
 
         public void StopAllTelemetry()
         {
             m_bIsBaseTelemetryOn = m_bIsNodeTelemetryOn = m_bIsSRBTelemetryOn = false;
+            
             Mediator.Notify(CommonDefs.MSG_STOP_TIMERS, "");//envia mensagem para a GUI parar de monitorar o stream
             Thread.Sleep(250);
+            
             m_streamManager.RemoveStreams();
         }
 
