@@ -100,7 +100,7 @@ namespace WpfApp1
             }
             SendMessage("Maneuver Node has ended.");
 
-            StopAllTelemetry();
+            StopAllTelemetry(false);
         }
 
         //This method is synchronous
@@ -135,6 +135,7 @@ namespace WpfApp1
             ExecuteManeuverNode();
 
             SendMessage("Orbital Maneuver has ended.");
+            StopAllTelemetry(false);
         }
 
         //This method is synchronous

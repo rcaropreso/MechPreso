@@ -436,7 +436,7 @@ namespace WpfApp1.ViewModel
         {
             _missionController?.ExecuteTakeOff(_tod);
             _maneuverBurnTime = 0;
-            OnStopTimers("");
+            //OnStopTimers("");
         }
 
         private void OnExecuteManeuver(object obj)
@@ -454,7 +454,7 @@ namespace WpfApp1.ViewModel
         {
             _missionController?.ExecuteManeuverNode();
             _maneuverBurnTime = 0;
-            OnStopTimers("");
+            //OnStopTimers("");
         }
 
         private void OnCircularize(object obj)
@@ -555,42 +555,42 @@ namespace WpfApp1.ViewModel
         {
             _missionController?.ExecuteDeorbitBody(_sbSetup);
             _maneuverBurnTime = 0;
-            OnStopTimers("");
+            //OnStopTimers("");
         }
 
         private void AsyncExecuteCancelVVel(SuicideBurnSetup _sbSetup)
         {
             _missionController?.ExecuteCancelVVel(_sbSetup);
             _maneuverBurnTime = 0;
-            OnStopTimers("");
+            //OnStopTimers("");
         }
 
         private void AsyncExecuteCancelHVel(SuicideBurnSetup _sbSetup)
         {
             _missionController?.ExecuteCancelHVel(_sbSetup);
             _maneuverBurnTime = 0;
-            OnStopTimers("");
+            //OnStopTimers("");
         }
 
         private void AsyncExecuteStopBurn(SuicideBurnSetup _sbSetup)
         {
             _missionController?.ExecuteStopBurn(_sbSetup);
             _maneuverBurnTime = 0;
-            OnStopTimers("");
+            //OnStopTimers("");
         }
 
         private void AsyncExecuteFineTunning(SuicideBurnSetup _sbSetup)
         {
             _missionController?.ExecuteFineTunning(_sbSetup);
             _maneuverBurnTime = 0;
-            OnStopTimers("");
+            //OnStopTimers("");
         }
 
         private void AsyncExecuteSuicideBurn(SuicideBurnSetup _sbSetup)
         {
             _missionController?.ExecuteSuicideBurn(_sbSetup);
             _maneuverBurnTime = 0;
-            OnStopTimers("");
+            //OnStopTimers("");
         }
 
         private void OnTakeoffScreen(object obj)
