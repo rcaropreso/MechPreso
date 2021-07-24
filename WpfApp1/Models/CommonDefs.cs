@@ -21,11 +21,6 @@ namespace WpfApp1.Models
         public static string MSG_NONE_SCREEN { get => "NoneScreen"; }
         public static string MSG_TAKEOFF_SCREEN { get => "TakeoffScreen"; }
         public static string MSG_LANDING_SCREEN { get => "LandingScreen"; }
-        public static string MSG_EXECUTE_CANCEL_VVEL { get => "CancelVVel"; }
-        public static string MSG_EXECUTE_CANCEL_HVEL { get => "CancelHVel"; }
-        public static string MSG_EXECUTE_DEORBIT_BODY { get => "DeorbitBody"; }
-        public static string MSG_EXECUTE_STOP_BURN { get => "StopBurn"; }
-        public static string MSG_EXECUTE_FINE_TUNNING { get => "FineTunning"; }
 
         public enum WhenStartBurn
         {

@@ -14,21 +14,92 @@ namespace WpfApp1.ViewModel
         private string _verticalBurnStart;
         private string _horizontalBurnStart;
         private string _highestPeak;
-        private string _deorbitAltitude;
-        
+
+        private float _deorbitAltitude;        
         private float _minVVel;
         private float _minHVel;
         private float _safetyMargin;
 
-        private ICommand _executeSB;
-        private ICommand _cancelVVel;
-        private ICommand _cancelHVel;
-        private ICommand _deorbitBody;
-        private ICommand _stopBurn;
-        private ICommand _fineTunning;
+        /*
+         */
+        private bool _deorbitBody;
+        private bool _cancelVVel;
+        private bool _cancelHVel;
+        private bool _stopBurn;
+        private bool _finalBurn;
 
+        private ICommand _executeSB;
+        
         private delegate void UpdateSuicideBurnLabelCallback(SuicideBurnData data);
 
+        public SuicideBurnViewModel()
+        {
+            //Valores default
+            DeorbitBody = true;
+            CancelVVel = true;
+            CancelHVel = true;
+            StopBurn = true;
+            FinalBurn = true;
+
+            DeorbitAltitude = 0.0f;
+            MinVerticalVelocity = 10.0f;
+            MinHorizontalVelocity = 5.0f;
+            SafetyMargin = 0.10f;
+        }
+
+        #region CheckBoxes
+        public bool DeorbitBody
+        {
+            get { return _deorbitBody; }
+            set
+            {
+                _deorbitBody = value;
+                OnPropertyChanged(nameof(DeorbitBody));
+            }
+        }
+
+        public bool CancelVVel
+        {
+            get { return _cancelVVel; }
+            set
+            {
+                _cancelVVel = value;
+                OnPropertyChanged(nameof(CancelVVel));
+            }
+        }
+
+        public bool CancelHVel
+        {
+            get { return _cancelHVel; }
+            set
+            {
+                _cancelHVel = value;
+                OnPropertyChanged(nameof(CancelHVel));
+            }
+        }
+
+        public bool StopBurn
+        {
+            get { return _stopBurn; }
+            set
+            {
+                _stopBurn = value;
+                OnPropertyChanged(nameof(StopBurn));
+            }
+        }
+
+        public bool FinalBurn
+        {
+            get { return _finalBurn; }
+            set
+            {
+                _finalBurn = value;
+                OnPropertyChanged(nameof(FinalBurn));
+            }
+        }
+        #endregion
+
+        #region Labels
         public string VerticalBurnStart
         {
             get { return _verticalBurnStart; }
@@ -38,6 +109,7 @@ namespace WpfApp1.ViewModel
                 OnPropertyChanged(nameof(VerticalBurnStart));
             }
         }
+
         public string HorizontalBurnStart
         {
             get { return _horizontalBurnStart; }
@@ -57,8 +129,10 @@ namespace WpfApp1.ViewModel
                 OnPropertyChanged(nameof(HighestPeak));
             }
         }
+        #endregion
 
-        public string DeorbitAltitude
+        #region Parameters
+        public float DeorbitAltitude
         {
             get { return _deorbitAltitude; }
             set
@@ -97,6 +171,7 @@ namespace WpfApp1.ViewModel
                 OnPropertyChanged(nameof(SafetyMargin));
             }
         }
+        #endregion
 
         public ICommand ExecuteSB
         {
@@ -106,10 +181,16 @@ namespace WpfApp1.ViewModel
                 {
                     SuicideBurnSetup _sbSetup = new SuicideBurnSetup
                     {
-                        DeorbitTargetAltitude      = float.Parse(DeorbitAltitude ?? "0"),
-                        MinVerticalVelocity        = MinVerticalVelocity == 0.0f? 10.0f : MinVerticalVelocity,
-                        MinHorizontalVelocity      = MinHorizontalVelocity == 0.0f ? 5.0f : MinHorizontalVelocity,
-                        SafetyMargin               = SafetyMargin == 0.0f ? 0.10f : SafetyMargin, //nao dá pra colocar zero, perigoso
+                        DeorbitTargetAltitude = DeorbitAltitude,
+                        MinVerticalVelocity = MinVerticalVelocity == 0.0f ? 10.0f : MinVerticalVelocity,
+                        MinHorizontalVelocity = MinHorizontalVelocity == 0.0f ? 5.0f : MinHorizontalVelocity,
+                        SafetyMargin = SafetyMargin == 0.0f ? 0.10f : SafetyMargin, //nao dá pra colocar zero, perigoso
+
+                        DeorbitBody = this.DeorbitBody,
+                        CancelVVel  = this.CancelVVel,
+                        CancelHVel = this.CancelHVel,
+                        StopBurn = this.StopBurn,
+                        FinalBurn = this.FinalBurn,
                     };
 
                     Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
@@ -118,112 +199,7 @@ namespace WpfApp1.ViewModel
                 }));
             }
         }
-
-        public ICommand DeorbitBody
-        {
-            get
-            {
-                return _deorbitBody ?? (_deorbitBody = new RelayCommand(x =>
-                {
-                    SuicideBurnSetup _sbSetup = new SuicideBurnSetup
-                    {
-                        DeorbitTargetAltitude = float.Parse(DeorbitAltitude ?? "0"),
-                        MinVerticalVelocity = MinVerticalVelocity == 0.0f ? 10.0f : MinVerticalVelocity,
-                        MinHorizontalVelocity = MinHorizontalVelocity == 0.0f ? 5.0f : MinHorizontalVelocity,
-                        SafetyMargin = SafetyMargin == 0.0f ? 0.10f : SafetyMargin, //nao dá pra colocar zero, perigoso
-                    };
-
-                    Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
-                    Mediator.Notify(CommonDefs.MSG_EXECUTE_DEORBIT_BODY, _sbSetup);
-                }));
-            }
-        }
-
-        public ICommand CancelVVel
-        {
-            get
-            {
-                return _cancelVVel ?? (_cancelVVel = new RelayCommand(x =>
-                {
-                    SuicideBurnSetup _sbSetup = new SuicideBurnSetup
-                    {
-                        DeorbitTargetAltitude = float.Parse(DeorbitAltitude ?? "0"),
-                        MinVerticalVelocity = MinVerticalVelocity == 0.0f ? 10.0f : MinVerticalVelocity,
-                        MinHorizontalVelocity = MinHorizontalVelocity == 0.0f ? 5.0f : MinHorizontalVelocity,
-                        SafetyMargin = SafetyMargin == 0.0f ? 0.10f : SafetyMargin, //nao dá pra colocar zero, perigoso
-                    };
-
-                    Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
-                    Mediator.Notify(CommonDefs.MSG_EXECUTE_CANCEL_VVEL, _sbSetup);
-                }));
-            }
-        }
-
-        public ICommand CancelHVel
-        {
-            get
-            {
-                return _cancelHVel ?? (_cancelHVel = new RelayCommand(x =>
-                {
-                    SuicideBurnSetup _sbSetup = new SuicideBurnSetup
-                    {
-                        DeorbitTargetAltitude = float.Parse(DeorbitAltitude ?? "0"),
-                        MinVerticalVelocity = MinVerticalVelocity == 0.0f ? 10.0f : MinVerticalVelocity,
-                        MinHorizontalVelocity = MinHorizontalVelocity == 0.0f ? 5.0f : MinHorizontalVelocity,
-                        SafetyMargin = SafetyMargin == 0.0f ? 0.10f : SafetyMargin, //nao dá pra colocar zero, perigoso
-                    };
-
-                    Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
-                    Mediator.Notify(CommonDefs.MSG_EXECUTE_CANCEL_HVEL, _sbSetup);
-                }));
-            }
-        }
-
-        public ICommand StopBurn
-        {
-            get
-            {
-                return _stopBurn ?? (_stopBurn = new RelayCommand(x =>
-                {
-                    SuicideBurnSetup _sbSetup = new SuicideBurnSetup
-                    {
-                        DeorbitTargetAltitude = float.Parse(DeorbitAltitude ?? "0"),
-                        MinVerticalVelocity = MinVerticalVelocity == 0.0f ? 10.0f : MinVerticalVelocity,
-                        MinHorizontalVelocity = MinHorizontalVelocity == 0.0f ? 5.0f : MinHorizontalVelocity,
-                        SafetyMargin = SafetyMargin == 0.0f ? 0.10f : SafetyMargin, //nao dá pra colocar zero, perigoso
-                    };
-
-                    Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
-                    Mediator.Notify(CommonDefs.MSG_EXECUTE_STOP_BURN, _sbSetup);
-                }));
-            }
-        }
-
-        public ICommand FineTunning
-        {
-            get
-            {
-                return _fineTunning ?? (_fineTunning = new RelayCommand(x =>
-                {
-                    SuicideBurnSetup _sbSetup = new SuicideBurnSetup
-                    {
-                        DeorbitTargetAltitude = float.Parse(DeorbitAltitude ?? "0"),
-                        MinVerticalVelocity = MinVerticalVelocity == 0.0f ? 10.0f : MinVerticalVelocity,
-                        MinHorizontalVelocity = MinHorizontalVelocity == 0.0f ? 5.0f : MinHorizontalVelocity,
-                        SafetyMargin = SafetyMargin == 0.0f ? 0.10f : SafetyMargin, //nao dá pra colocar zero, perigoso
-                    };
-
-                    Mediator.Notify(CommonDefs.MSG_CLEAR_SCREEN, "");
-                    //Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");
-                    Mediator.Notify(CommonDefs.MSG_EXECUTE_FINE_TUNNING, _sbSetup);
-                }));
-            }
-        }
-
+       
         public void SendMessage(string strMessage)
         {
             throw new NotImplementedException();

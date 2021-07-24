@@ -172,8 +172,9 @@ namespace WpfApp1.Controllers
 
             SendMessage("Starting Initial Rotation...");
             TurnOnAutoPilot();
-            this.SetPitchAndHeading(90, 0.0f, false, true); //primeiro fique na vertical
-            this.SetPitchAndHeading(90, _tod.ShipHeadingAngle, true, false); //agora rotaciona
+            //this.SetPitchAndHeading(90, 0.0f, false, true); //primeiro fique na vertical
+            //this.SetPitchAndHeading(90, _tod.ShipHeadingAngle, true, false); //agora rotaciona
+            this.SetPitchAndHeading(90, _tod.ShipHeadingAngle, false, false); //agora rotaciona
             SendMessage("Initial Rotation has been completed.");
         }
 

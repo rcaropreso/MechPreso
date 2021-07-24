@@ -174,22 +174,28 @@ namespace WpfApp1.Controllers
                 return;
             }
 
-            TurnOnAutoPilot();
-            SendMessage("Positioning ship...");
-            SetShipPosition(SASMode.Retrograde, false);
-
             //Get current fuel amount
             var fuelBegin = CurrentVessel.Resources.Amount("LiquidFuel");
+            if (suicideBurnSetup.DeorbitBody)
+            {
+                SendMessage("Deorbiting body...");
+                SendMessage("Positioning ship...");
+                CurrentVessel.Control.SpeedMode = SpeedMode.Orbit;
 
-            //prepareDeorbitKerbin();
-            CurrentVessel.Control.SpeedMode = SpeedMode.Orbit;
-            DeorbitBody(suicideBurnSetup.DeorbitTargetAltitude);
+                TurnOnAutoPilot();
+                SetShipPosition(SASMode.Retrograde, false);
+                //prepareDeorbitKerbin();
+
+                DeorbitBody(suicideBurnSetup.DeorbitTargetAltitude);
+                SendMessage("Deorbit body has ended.");
+
+                SendMessage("Adjusting ship position aand roll...");
+                TurnOnAutoPilot();
+                SetShipPosition(SASMode.Retrograde, false);
+                SetupRoll(false);
+            }
 
             CurrentVessel.Control.SpeedMode = SpeedMode.Surface;
-
-            TurnOnAutoPilot();
-            SetShipPosition(SASMode.Retrograde, false);
-            SetupRoll(false);
 
             //CurrentVessel.Control.Brakes = true; //aciona aerofreios se houver
             //CurrentVessel.Control.SetActionGroup(9, true); //aciona escudo de calor configurado em 9, se houver
@@ -199,24 +205,39 @@ namespace WpfApp1.Controllers
 
             if (!bLandingOnSea)
             {
-                //Cancela velocidade vertical, levando em conta o ponto de maior altitude do planeta em questão
-                DoBurn(CommonDefs.BurnType.Vertical, suicideBurnSetup.MinVerticalVelocity, CommonDefs.WhenStartBurn.WaitVerticalAltitude, (float)data.HighestPeak, 0.10f);
+                if (suicideBurnSetup.CancelVVel)
+                {
+                    //Cancela velocidade vertical, levando em conta o ponto de maior altitude do planeta em questão
+                    SendMessage("Cancelling Vertical Velocity...");
+                    DoBurn(CommonDefs.BurnType.Vertical, suicideBurnSetup.MinVerticalVelocity, CommonDefs.WhenStartBurn.WaitVerticalAltitude, (float)data.HighestPeak, 0.10f);
+                    SendMessage("Cancelling Vertical Velocity has ended.");
+                }
 
-                //Ajusta a posição da nave
-                SetShipPosition(SASMode.Retrograde, true);
-                SetupRoll(false);
+                if (suicideBurnSetup.CancelHVel)
+                {
+                    //Ajusta a posição da nave
+                    SetShipPosition(SASMode.Retrograde, true);
+                    SetupRoll(false);
 
-                //Cancela velocidade horizontal mantendo a ultima velocidade vertical constante (quase um hover)
-                //suicideBurnSetup.MinHorizontalVelocity = 5.0f;
-                DoBurn(CommonDefs.BurnType.Diagonal, suicideBurnSetup.MinHorizontalVelocity, CommonDefs.WhenStartBurn.Now, 0.0f, 0.0f);
+                    //Cancela velocidade horizontal mantendo a ultima velocidade vertical constante (quase um hover)
+                    //suicideBurnSetup.MinHorizontalVelocity = 5.0f;
+                    SendMessage("Cancelling Horizontal Velocity...");
+                    DoBurn(CommonDefs.BurnType.Diagonal, suicideBurnSetup.MinHorizontalVelocity, CommonDefs.WhenStartBurn.Now, 0.0f, 0.0f);
+                    SendMessage("Cancelling Horizontal Velocity has ended.");
+                }
             }
 
             //A partir deste ponto, deveriamos ter um suicide burn "quase" vertical
-            //Parada total
-            float limitAltitude = 500.0f; //vamos garantir que a nave chega a 30 m/s acima de 500m de altitude
-            SetEnginesGimball();
-            DoBurn(CommonDefs.BurnType.Retrograde, 30.0f, CommonDefs.WhenStartBurn.WaitVerticalAltitude, limitAltitude, 0.10f);
-            SetEnginesGimball(false);
+            if (suicideBurnSetup.StopBurn)
+            {
+                //Parada total
+                float limitAltitude = 500.0f; //vamos garantir que a nave chega a 30 m/s acima de 500m de altitude
+                SendMessage("Performing stop burn...");
+                SetEnginesGimball();
+                DoBurn(CommonDefs.BurnType.Retrograde, 30.0f, CommonDefs.WhenStartBurn.WaitVerticalAltitude, limitAltitude, 0.10f);
+                SetEnginesGimball(false);
+                SendMessage("Stop burn has ended.");
+            }
 
             if (bLandingOnSea)
             {
@@ -234,9 +255,14 @@ namespace WpfApp1.Controllers
             {
                 SendMessage("Landing on land...");
 
-                //Melhor colocar a checagem de aerofreios, trem de pouso e paraquedas em uma thread separada
-                CurrentVessel.Control.Gear = true; //aciona trem de pouso
-                DoFinalBurn(suicideBurnSetup);
+                if (suicideBurnSetup.FinalBurn)
+                {
+                    SendMessage("Final burn...");
+                    //Melhor colocar a checagem de aerofreios, trem de pouso e paraquedas em uma thread separada
+                    CurrentVessel.Control.Gear = true; //aciona trem de pouso
+                    DoFinalBurn(suicideBurnSetup);
+                    SendMessage("Final burn has ended.");
+                }
             }
 
             CurrentVessel.Control.Throttle = 0.0f;
@@ -692,7 +718,7 @@ namespace WpfApp1.Controllers
             Task t0 = Task.Run(() => CheckSuicideBurn(suicideBurnSetup));
         }
 
-        public void ExecuteDeorbitBody(SuicideBurnSetup suicideBurnSetup)
+        private void ExecuteDeorbitBody(SuicideBurnSetup suicideBurnSetup)
         {
             _SuicideBurnStatus = CommonDefs.VesselState.Preparation;
 
@@ -701,7 +727,7 @@ namespace WpfApp1.Controllers
             Task t0 = Task.Run(() => CheckDeorbitBody(suicideBurnSetup));
         }
 
-        public void ExecuteCancelVVel(SuicideBurnSetup suicideBurnSetup)
+        private void ExecuteCancelVVel(SuicideBurnSetup suicideBurnSetup)
         {
             _SuicideBurnStatus = CommonDefs.VesselState.Preparation;
 
@@ -710,7 +736,7 @@ namespace WpfApp1.Controllers
             Task t0 = Task.Run(() => CheckCancelVVel(suicideBurnSetup));
         }
 
-        public void ExecuteCancelHVel(SuicideBurnSetup suicideBurnSetup)
+        private void ExecuteCancelHVel(SuicideBurnSetup suicideBurnSetup)
         {
             _SuicideBurnStatus = CommonDefs.VesselState.Preparation;
 
@@ -719,7 +745,7 @@ namespace WpfApp1.Controllers
             Task t0 = Task.Run(() => CheckCancelHVel(suicideBurnSetup));
         }
 
-        public void ExecuteStopBurn(SuicideBurnSetup suicideBurnSetup)
+        private void ExecuteStopBurn(SuicideBurnSetup suicideBurnSetup)
         {
             _SuicideBurnStatus = CommonDefs.VesselState.Preparation;
 
@@ -728,7 +754,7 @@ namespace WpfApp1.Controllers
             Task t0 = Task.Run(() => CheckStopBurn(suicideBurnSetup));
         }
 
-        public void ExecuteFineTunning(SuicideBurnSetup suicideBurnSetup)
+        private void ExecuteFineTunning(SuicideBurnSetup suicideBurnSetup)
         {
             _SuicideBurnStatus = CommonDefs.VesselState.Preparation;
 

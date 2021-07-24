@@ -44,7 +44,13 @@ namespace WpfApp1
         public float DeorbitTargetAltitude;
         public float MinVerticalVelocity = 10.0f;
         public float MinHorizontalVelocity = 5.0f;
-        public float SafetyMargin = 0.10f;        
+        public float SafetyMargin = 0.10f;
+
+        public bool DeorbitBody = true; //cancela orbita
+        public bool CancelVVel = true;  //cancela velocidade vertical
+        public bool CancelHVel = true;  //cancela velocidade horizontal (hover)
+        public bool StopBurn = true;    //Executa parada a certa altitude (reduz a 30m/s)
+        public bool FinalBurn = true; //Ajustes finais de pouso a partir de 300m 
     }
 
     public class PlanetData

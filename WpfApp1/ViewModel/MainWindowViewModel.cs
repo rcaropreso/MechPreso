@@ -244,11 +244,6 @@ namespace WpfApp1.ViewModel
             Mediator.Subscribe(CommonDefs.MSG_CIRCULARIZE,      OnCircularize);
 
             Mediator.Subscribe(CommonDefs.MSG_EXECUTE_SUICIDE_BURN, OnExecuteSuicideBurn);
-            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_CANCEL_VVEL,  OnExecuteCancelVVel);
-            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_CANCEL_HVEL, OnExecuteCancelHVel);
-            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_DEORBIT_BODY, OnExecuteDeorbitBody);
-            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_STOP_BURN, OnExecuteStopBurn);
-            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_FINE_TUNNING, OnExecuteFineTunning);
 
             Mediator.Subscribe(CommonDefs.MSG_NONE_SCREEN,    OnNoneScreen);
             Mediator.Subscribe(CommonDefs.MSG_TAKEOFF_SCREEN, OnTakeoffScreen);
@@ -467,76 +462,6 @@ namespace WpfApp1.ViewModel
             _missionController?.PlanCircularization(reduceOrbit);
         }
 
-        private void OnExecuteDeorbitBody(object obj)
-        {
-            if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
-                return;
-
-            OnSendMessage("Starting Maneuver...");
-
-            SuicideBurnSetup _sbSetup = (SuicideBurnSetup)obj;
-
-            _missionController?.ResetManualControl();
-
-            Task.Run(() => AsyncExecuteDeorbitBody(_sbSetup));
-        }
-
-        private void OnExecuteCancelVVel(object obj)
-        {
-            if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
-                return;
-
-            SuicideBurnSetup _sbSetup = (SuicideBurnSetup)obj;
-
-            OnSendMessage("Starting Maneuver...");
-
-            _missionController?.ResetManualControl();
-
-            Task.Run(() => AsyncExecuteCancelVVel(_sbSetup));
-        }
-
-        private void OnExecuteCancelHVel(object obj)
-        {
-            if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
-                return;
-
-            SuicideBurnSetup _sbSetup = (SuicideBurnSetup)obj;
-
-            OnSendMessage("Starting Maneuver...");
-
-            _missionController?.ResetManualControl();
-
-            Task.Run(() => AsyncExecuteCancelHVel(_sbSetup));
-        }
-
-        private void OnExecuteStopBurn(object obj)
-        {
-            if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
-                return;
-
-            OnSendMessage("Starting Maneuver...");
-
-            SuicideBurnSetup _sbSetup = (SuicideBurnSetup)obj;
-
-            _missionController?.ResetManualControl();
-
-            Task.Run(() => AsyncExecuteStopBurn(_sbSetup));
-        }
-
-        private void OnExecuteFineTunning(object obj)
-        {
-            if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
-                return;
-
-            OnSendMessage("Starting Maneuver...");
-
-            SuicideBurnSetup _sbSetup = (SuicideBurnSetup)obj;
-
-            _missionController?.ResetManualControl();
-
-            Task.Run(() => AsyncExecuteFineTunning(_sbSetup));
-        }
-
         private void OnExecuteSuicideBurn(object obj)
         {
             if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
@@ -550,42 +475,6 @@ namespace WpfApp1.ViewModel
 
             Task.Run(() => AsyncExecuteSuicideBurn(_sbSetup));
         }
-
-        private void AsyncExecuteDeorbitBody(SuicideBurnSetup _sbSetup)
-        {
-            _missionController?.ExecuteDeorbitBody(_sbSetup);
-            _maneuverBurnTime = 0;
-            //OnStopTimers("");
-        }
-
-        private void AsyncExecuteCancelVVel(SuicideBurnSetup _sbSetup)
-        {
-            _missionController?.ExecuteCancelVVel(_sbSetup);
-            _maneuverBurnTime = 0;
-            //OnStopTimers("");
-        }
-
-        private void AsyncExecuteCancelHVel(SuicideBurnSetup _sbSetup)
-        {
-            _missionController?.ExecuteCancelHVel(_sbSetup);
-            _maneuverBurnTime = 0;
-            //OnStopTimers("");
-        }
-
-        private void AsyncExecuteStopBurn(SuicideBurnSetup _sbSetup)
-        {
-            _missionController?.ExecuteStopBurn(_sbSetup);
-            _maneuverBurnTime = 0;
-            //OnStopTimers("");
-        }
-
-        private void AsyncExecuteFineTunning(SuicideBurnSetup _sbSetup)
-        {
-            _missionController?.ExecuteFineTunning(_sbSetup);
-            _maneuverBurnTime = 0;
-            //OnStopTimers("");
-        }
-
         private void AsyncExecuteSuicideBurn(SuicideBurnSetup _sbSetup)
         {
             _missionController?.ExecuteSuicideBurn(_sbSetup);

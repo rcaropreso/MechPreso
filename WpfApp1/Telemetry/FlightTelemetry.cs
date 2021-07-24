@@ -306,6 +306,8 @@ namespace WpfApp1
         {
             try
             {
+                Vessel vv = m_conn.SpaceCenter().ActiveVessel;
+
                 var thrust = m_conn?.SpaceCenter()?.ActiveVessel?.AvailableThrust; //in Newtons
                 return thrust ?? 0.0f;
             }

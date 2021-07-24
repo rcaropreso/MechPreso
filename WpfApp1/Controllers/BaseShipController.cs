@@ -85,6 +85,7 @@ namespace WpfApp1.Controllers
             ReferenceFrame CurrentRefFrame = _flightTelemetry.CurrentRefFrame;
             Flight flight = CurrentVessel.Flight(CurrentRefFrame);
 
+            
             float h;
             float p;
 

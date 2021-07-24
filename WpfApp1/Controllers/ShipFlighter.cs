@@ -98,31 +98,6 @@ namespace WpfApp1
             _landingController.ExecuteSuicideBurn(suicideBurnSetup);
         }
 
-        public void ExecuteDeorbitBody(SuicideBurnSetup suicideBurnSetup)
-        {
-            _landingController.ExecuteDeorbitBody(suicideBurnSetup);
-        }
-
-        public void ExecuteCancelVVel(SuicideBurnSetup suicideBurnSetup)
-        {
-            _landingController.ExecuteCancelVVel(suicideBurnSetup);
-        }
-
-        public void ExecuteCancelHVel(SuicideBurnSetup suicideBurnSetup)
-        {
-            _landingController.ExecuteCancelHVel(suicideBurnSetup);
-        }
-
-        public void ExecuteStopBurn(SuicideBurnSetup suicideBurnSetup)
-        {
-            _landingController.ExecuteStopBurn(suicideBurnSetup);
-        }
-
-        public void ExecuteFineTunning(SuicideBurnSetup suicideBurnSetup)
-        {
-            _landingController.ExecuteFineTunning(suicideBurnSetup);
-        }
-
         public void Launch(TakeOffDescriptor _tod)
         {
             _takeOffController.Launch(_tod);
