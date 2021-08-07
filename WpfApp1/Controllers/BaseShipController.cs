@@ -25,10 +25,12 @@ namespace WpfApp1.Controllers
         protected CommonDefs.VesselState _TakeOffStatus;
         protected CommonDefs.VesselState _ManeuverStatus;
         protected CommonDefs.VesselState _SuicideBurnStatus;
+        protected CommonDefs.VesselState _RoverStatus;
 
         public CommonDefs.VesselState TakeOffStatus { get => _TakeOffStatus; }
         public CommonDefs.VesselState ManeuverStatus { get => _ManeuverStatus; }
         public CommonDefs.VesselState SuicideBurnStatus { get => _SuicideBurnStatus; }
+        public CommonDefs.VesselState RoverStatus { get => _RoverStatus; }
 
         public Vessel CurrentVessel { get => _conn.SpaceCenter().ActiveVessel; }
         public string ShipName { get => CurrentVessel.Name; }
@@ -44,6 +46,7 @@ namespace WpfApp1.Controllers
             _SuicideBurnStatus = CommonDefs.VesselState.NotStarted;
             _TakeOffStatus = CommonDefs.VesselState.NotStarted;
             _ManeuverStatus = CommonDefs.VesselState.NotStarted;
+            _RoverStatus = CommonDefs.VesselState.NotStarted;
         }
 
         protected bool ReturnToManualControl()

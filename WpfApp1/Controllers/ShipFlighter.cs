@@ -32,11 +32,15 @@ namespace WpfApp1
         public CommonDefs.VesselState TakeOffStatus { get => _takeOffController.TakeOffStatus; }
         public CommonDefs.VesselState SuicideBurnStatus { get => _landingController.SuicideBurnStatus; }
         public CommonDefs.VesselState ManeuverStatus { get => _maneuverController.ManeuverStatus; }
+        public CommonDefs.VesselState RoverStatus { get => _roverController.RoverStatus; }
+
+
         public float ManeuverBurnTime { get => _maneuverController.ManeuverBurnTime; }
 
         private LandingController _landingController;
         private TakeOffController _takeOffController;
         private ManeuverController _maneuverController;
+        private RoverController _roverController;
 
         public ShipFlighter(in Connection conn)
         {
@@ -52,6 +56,7 @@ namespace WpfApp1
             _landingController = new LandingController(in conn, in _flightTelemetry);
             _takeOffController = new TakeOffController(in conn, in _flightTelemetry);
             _maneuverController = new ManeuverController(in conn, in _flightTelemetry);
+            _roverController = new RoverController(in conn, in _flightTelemetry);
         }
 
         public void SetManualControl()
@@ -59,6 +64,7 @@ namespace WpfApp1
             _landingController.SetManualControl();
             _takeOffController.SetManualControl();
             _maneuverController.SetManualControl();
+            _roverController.SetManualControl();
         }
 
         public void ResetManualControl()
@@ -66,11 +72,12 @@ namespace WpfApp1
             _landingController.ResetManualControl();
             _takeOffController.ResetManualControl();
             _maneuverController.ResetManualControl();
+            _roverController.ResetManualControl();
         }
 
-        public void RestartTelemetry(bool basicTelemetryOn, bool nodeTelemetryOn)
+        public void RestartTelemetry(bool basicTelemetryOn, bool nodeTelemetryOn, bool roverTelemetryOn)
         {
-            _flightTelemetry.RestartTelemetry(basicTelemetryOn, nodeTelemetryOn);
+            _flightTelemetry.RestartTelemetry(basicTelemetryOn, nodeTelemetryOn, roverTelemetryOn);
         }
 
         public void StopAllTelemetry()
@@ -83,6 +90,7 @@ namespace WpfApp1
             _landingController.ResetStates();
             _takeOffController.ResetStates();
             _maneuverController.ResetStates();
+            _roverController.ResetStates();
         }
 
         public void SendMessage(string strMessage)
@@ -116,6 +124,11 @@ namespace WpfApp1
         public float CalculateBurnTime()
         {
             return _maneuverController.CalculateBurnTime();
+        }
+
+        public void ExecuteGoRover(RoverControlDescriptor _roverSetup)
+        {
+            _roverController.ExecuteGoToWaypoint(_roverSetup);
         }
     }
 }

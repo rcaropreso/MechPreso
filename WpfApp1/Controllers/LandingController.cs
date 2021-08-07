@@ -438,7 +438,7 @@ namespace WpfApp1.Controllers
 
             //Esta classe deve ser criada aqui sempre (por enquanto) pois pode ser usada no while 
             //O set point é a ultima velocidade vertical obtida, que deverá ser mantida
-            float timeStep = 0.050f; //500 ms
+            float timeStep = 0.050f; //50 ms
             PID _controller = new PID(_SP: (float)data.VerticalVelocity, _P: 0.5f, _I: 0.05f, _D: 0.05f,
                 _TimeStep: timeStep, _MinValue: 0.0f, _MaxValue: 90.0f);
             float output;

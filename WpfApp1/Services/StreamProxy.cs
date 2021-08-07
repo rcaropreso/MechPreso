@@ -35,7 +35,8 @@ namespace WpfApp1
         private Stream<double> _CurrentSpeedStream;
         private Stream<double> _HorizontalSpeedStream;
         private Stream<double> _VerticalSpeedStream;
-
+        private Stream<double> _LatitudeStream;
+        private Stream<double> _LongitudeStream;
 
         public Stream<double> ApoapsisAltitudeStream {get => _ApoapsisAltitudeStream; }
         public Stream<double> PeriapsisAltitudeStream { get => _PeriapsisAltitudeStream; }
@@ -51,7 +52,10 @@ namespace WpfApp1
         public Stream<double> CurrentSpeedStream { get => _CurrentSpeedStream; }
         public Stream<double> HorizontalSpeedStream { get => _HorizontalSpeedStream; }
         public Stream<double> VerticalSpeedStream { get => _VerticalSpeedStream; }
-        
+        public Stream<double> LatitudeStream { get => _LatitudeStream; }
+        public Stream<double> LongitudeStream { get => _LongitudeStream; }
+
+
         public ReferenceFrame CurrentReferenceFrame  { get; }
 
         public Vessel CurrentVessel { get => m_conn.SpaceCenter().ActiveVessel; }
@@ -199,6 +203,24 @@ namespace WpfApp1
             _VerticalSpeedStream = m_conn.AddStream(() => flight.VerticalSpeed);
         }
 
+        public void CreateLatitudeStream()
+        {
+            _LatitudeStream?.Remove();
+            _LatitudeStream = null;
+
+            var flight = CurrentVessel.Flight(this.CurrentReferenceFrame);
+            _LatitudeStream = m_conn.AddStream(() => flight.Latitude);
+        }
+
+        public void CreateLongitudeStream()
+        {
+            _LongitudeStream?.Remove();
+            _LongitudeStream = null;
+
+            var flight = CurrentVessel.Flight(this.CurrentReferenceFrame);
+            _LongitudeStream = m_conn.AddStream(() => flight.Longitude);
+        }
+
         public void RemoveStreams()
         {
             try
@@ -217,6 +239,8 @@ namespace WpfApp1
                 _CurrentSpeedStream?.Remove();
                 _HorizontalSpeedStream?.Remove();
                 _VerticalSpeedStream?.Remove();
+                _LatitudeStream?.Remove();
+                _LongitudeStream?.Remove();
             }
             catch (System.IO.IOException e)
             {

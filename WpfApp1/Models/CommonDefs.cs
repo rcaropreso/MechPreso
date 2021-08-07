@@ -21,6 +21,8 @@ namespace WpfApp1.Models
         public static string MSG_NONE_SCREEN { get => "NoneScreen"; }
         public static string MSG_TAKEOFF_SCREEN { get => "TakeoffScreen"; }
         public static string MSG_LANDING_SCREEN { get => "LandingScreen"; }
+        public static string MSG_ROVER_SCREEN { get => "RoverScreen"; }
+        public static string MSG_EXECUTE_GO_ROVER { get => "ExecuteGoRover"; }
 
         public enum WhenStartBurn
         {

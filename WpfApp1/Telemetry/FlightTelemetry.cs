@@ -30,7 +30,9 @@ namespace WpfApp1
             NodeTimeTo,
             CurrentSpeed,
             HorizontalSpeed,
-            VerticalSpeed
+            VerticalSpeed,
+            Latitude,
+            Longitude
         };
 
         public ReferenceFrame CurrentRefFrame { get => _CurrentRefFrame; }
@@ -43,6 +45,7 @@ namespace WpfApp1
         private bool m_bIsBaseTelemetryOn;
         private bool m_bIsNodeTelemetryOn; 
         private bool m_bIsSRBTelemetryOn;
+        private bool m_bIsRoverTelemetryOn;
 
         #region Public Methods
         public FlightTelemetry(in Connection conn)
@@ -164,6 +167,20 @@ namespace WpfApp1
                         }
                         break;
 
+                    case TelemetryInfo.Latitude:
+                        if(m_bIsRoverTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.LatitudeStream?.Get();
+                        }
+                        break;
+
+                    case TelemetryInfo.Longitude:
+                        if (m_bIsRoverTelemetryOn)
+                        {
+                            returnValue = m_streamManager?.LongitudeStream?.Get();
+                        }
+                        break;
+
                     default:
                         returnValue = -1.0d;
                         break;
@@ -183,7 +200,7 @@ namespace WpfApp1
             return returnValue ?? -1.0d;
         }
 
-        public void RestartTelemetry(bool basicTelemetryOn, bool nodeTelemetryOn)
+        public void RestartTelemetry(bool basicTelemetryOn, bool nodeTelemetryOn, bool roverTelemetryOn)
         {
             StopAllTelemetry();
 
@@ -201,6 +218,11 @@ namespace WpfApp1
                 StartNodeTelemetry();
             }
 
+            if(roverTelemetryOn)
+            {
+                StartRoverTelemetry();
+            }
+
             //Por enquanto o evento de timer nao está separado para cada tipo de timer ou telemetria, entao temos que ligar todos
             Thread.Sleep(1000);
             Mediator.Notify(CommonDefs.MSG_START_TIMERS, "");//envia mensagem para a GUI voltar a monitorar o stream
@@ -208,7 +230,10 @@ namespace WpfApp1
 
         public void StopAllTelemetry()
         {
-            m_bIsBaseTelemetryOn = m_bIsNodeTelemetryOn = m_bIsSRBTelemetryOn = false;
+            m_bIsBaseTelemetryOn = false;
+            m_bIsNodeTelemetryOn = false;
+            m_bIsSRBTelemetryOn = false;
+            m_bIsRoverTelemetryOn = false;
             
             Mediator.Notify(CommonDefs.MSG_STOP_TIMERS, "");//envia mensagem para a GUI parar de monitorar o stream
             Thread.Sleep(250);
@@ -235,6 +260,7 @@ namespace WpfApp1
         public void StartSRBTelemetry(int iSRBStage)
         {
             m_streamManager.CreateSolidFuelStream(iSRBStage);
+            
             m_bIsSRBTelemetryOn = true;
         }
 
@@ -243,7 +269,26 @@ namespace WpfApp1
             m_streamManager.CreateRemainingDeltaVStream();
             m_streamManager.CreateNodeTimeTo();
             m_streamManager.CreateUTStream();
+            
             m_bIsNodeTelemetryOn = true;
+        }
+
+        public void StartRoverTelemetry()
+        {
+            m_streamManager.CreateLatitudeStream();
+            m_streamManager.CreateLongitudeStream();
+
+            m_bIsRoverTelemetryOn = true;
+        }
+
+        public RoverData GetRoverTelemetryInfo()
+        {
+            var lat = (float) GetInfo(TelemetryInfo.Latitude);
+            var lon = (float) GetInfo(TelemetryInfo.Longitude);
+
+            RoverData retData = new RoverData(lat, lon);
+
+            return retData;
         }
 
         public SuicideBurnData GetSuicideBurnTelemetryInfo() //poderia fazer um takeoffTelemetryInfo

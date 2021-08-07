@@ -51,7 +51,8 @@
             <Button      x:Name="btnManualControl" Content="Manual Control" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,0,0"    Height="50" Width="116" Background="#FFB61616" Foreground="White" Command="{Binding ManualControl}" />
             <Button      x:Name="btnCopyLog"       Content="Copy Log"       HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,60,0,0"   Height="50" Width="116" Command="{Binding CopyLog}"/>
             <RadioButton x:Name="rdTakeOff"        Content="Takeoff"        HorizontalAlignment="Left" VerticalAlignment="Top" Margin="137,6,0,0"  Command="{Binding ViewSelector}" CommandParameter="{Binding ElementName=rdTakeOff, Path=Content}" IsChecked="True"/>
-            <RadioButton x:Name="rdLanding"        Content="Landing"        HorizontalAlignment="Left" VerticalAlignment="Top" Margin="137,38,0,0" Command="{Binding ViewSelector}" CommandParameter="{Binding ElementName=rdLanding, Path=Content}"/>
+            <RadioButton x:Name="rdLanding"        Content="Landing"        HorizontalAlignment="Left" VerticalAlignment="Top" Margin="137,36,0,0" Command="{Binding ViewSelector}" CommandParameter="{Binding ElementName=rdLanding, Path=Content}"/>
+            <RadioButton x:Name="rdRover"          Content="Rover"          HorizontalAlignment="Left" VerticalAlignment="Top" Margin="137,66,0,0" Command="{Binding ViewSelector}" CommandParameter="{Binding ElementName=rdRover,   Path=Content}"/>
         </Grid>
     </Grid>
 </Window>

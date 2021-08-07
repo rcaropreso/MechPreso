@@ -41,9 +41,9 @@ namespace WpfApp1
             }
         }
 
-        public void RestartTelemetry(bool basicTelemetryOn, bool nodeTelemetryOn)
+        public void RestartTelemetry(bool basicTelemetryOn, bool nodeTelemetryOn, bool roverTelemetryOn)
         {
-            ShipControl.RestartTelemetry(basicTelemetryOn, nodeTelemetryOn);
+            ShipControl.RestartTelemetry(basicTelemetryOn, nodeTelemetryOn, roverTelemetryOn);
         }
 
         public void StopAllTelemetry(bool bClearScreen=true)
@@ -75,7 +75,7 @@ namespace WpfApp1
         public void PlanCircularization(bool bReduce = false)
         {
             //Restart Telemetry
-            RestartTelemetry(false, true);
+            RestartTelemetry(false, true, false);
 
             ShipControl.PlanCircularization(bReduce);
         }
@@ -83,7 +83,7 @@ namespace WpfApp1
         //This method is synchronous
         public void ExecuteManeuverNode()
         {
-            RestartTelemetry(false, true);
+            RestartTelemetry(false, true, false);
             Thread.Sleep(1000);
 
             SendMessage("Executing Maneuver Node...");
@@ -107,7 +107,7 @@ namespace WpfApp1
         public void ExecuteTakeOff(TakeOffDescriptor _tod)
         {
             //Restart Telemetry
-            RestartTelemetry(true, true);
+            RestartTelemetry(true, true, false);
 
             //Fazer contagem regressiva e ligar a nave
             for (int i = 3; i >= 0; i--)
@@ -141,7 +141,7 @@ namespace WpfApp1
         //This method is synchronous
         public void ExecuteSuicideBurn(SuicideBurnSetup suicideBurnSetup)
         {
-            RestartTelemetry(true, false);
+            RestartTelemetry(true, false, false);
             Thread.Sleep(1000);
 
             SendMessage("Executing Suicide Burn...");
@@ -158,6 +158,29 @@ namespace WpfApp1
             }
 
             SendMessage("Suicide Burn has ended.");
+            StopAllTelemetry(false);
+        }
+
+        //This method is synchronous
+        public void ExecuteGoRover(RoverControlDescriptor _roverSetup)
+        {
+            RestartTelemetry(true, false, true);
+            Thread.Sleep(1000);
+
+            SendMessage("Executing Go Rover...");
+
+            ShipControl.ExecuteGoRover(_roverSetup);
+
+            //Wait
+            while (ShipControl.RoverStatus != CommonDefs.VesselState.Finished)
+            {
+                if (ReturnToManualControl())
+                    return;
+
+                Thread.Sleep(500);
+            }
+
+            SendMessage("Go Rover has ended.");
             StopAllTelemetry(false);
         }
 

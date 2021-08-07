@@ -25,5 +25,9 @@
             <view:SuicideBurn/>
         </DataTemplate>
 
+        <DataTemplate DataType="{x:Type viewmodel:RoverViewModel}">
+            <view:RoverView/>
+        </DataTemplate>
+
     </Application.Resources>
 </Application>

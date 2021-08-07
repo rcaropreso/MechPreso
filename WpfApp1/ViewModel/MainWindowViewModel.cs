@@ -18,11 +18,14 @@ namespace WpfApp1.ViewModel
         private IPageViewModel _telemetryViewModel;
         private IPageViewModel _suicideBurnViewModel;
         private IPageViewModel _takeoffViewModel;
+        private IPageViewModel _roverViewModel;
+
 
         private string _eventLog;
         private System.Timers.Timer _telemetryTimer = null;
         private System.Timers.Timer _maneuverTimer = null;
         private System.Timers.Timer _suicideBurnTimer = null;
+        private System.Timers.Timer _roverTimer = null;
         private float _maneuverBurnTime = 0;
 
 
@@ -78,6 +81,9 @@ namespace WpfApp1.ViewModel
 
                 switch (_selectedView)
                 {
+                    case "Rover":
+                        ChangeViewModel(PageViewModels[2]);
+                        break;
                     case "Landing":
                         ChangeViewModel(PageViewModels[1]);
                         break;
@@ -197,6 +203,15 @@ namespace WpfApp1.ViewModel
             }
         }
 
+        public IPageViewModel RoverViewModel
+        {
+            get
+            {
+                return _roverViewModel;
+            }
+        }
+
+
         public string EventLog
         {
             get
@@ -219,10 +234,12 @@ namespace WpfApp1.ViewModel
             _telemetryViewModel   = new TelemetryViewModel();
             _suicideBurnViewModel = new SuicideBurnViewModel();
             _takeoffViewModel     = new TakeOffViewModel();
+            _roverViewModel       = new RoverViewModel();
             
             //Cadastro das ViewModels usadas na aplicação
             PageViewModels.Add(_takeoffViewModel);
             PageViewModels.Add(_suicideBurnViewModel);
+            PageViewModels.Add(_roverViewModel);
 
             CurrentPageViewModel = null;
 
@@ -233,8 +250,8 @@ namespace WpfApp1.ViewModel
             //Cadastro das mensagens e tópicos gerenciadas pelo Mediator
             Mediator.Subscribe(CommonDefs.MSG_CLEAR_SCREEN, OnClearScreen);
             Mediator.Subscribe(CommonDefs.MSG_SEND_MESSAGE, OnSendMessage);
-            Mediator.Subscribe(CommonDefs.MSG_CONNECT,     OnConnect);
-            Mediator.Subscribe(CommonDefs.MSG_DISCONNECT,  OnDisconnect);
+            Mediator.Subscribe(CommonDefs.MSG_CONNECT,      OnConnect);
+            Mediator.Subscribe(CommonDefs.MSG_DISCONNECT,   OnDisconnect);
             Mediator.Subscribe(CommonDefs.MSG_START_TIMERS, OnStartTimers); //Talvez nao precise inscrever este aqui
             Mediator.Subscribe(CommonDefs.MSG_STOP_TIMERS,  OnStopTimers);
 
@@ -244,10 +261,12 @@ namespace WpfApp1.ViewModel
             Mediator.Subscribe(CommonDefs.MSG_CIRCULARIZE,      OnCircularize);
 
             Mediator.Subscribe(CommonDefs.MSG_EXECUTE_SUICIDE_BURN, OnExecuteSuicideBurn);
+            Mediator.Subscribe(CommonDefs.MSG_EXECUTE_GO_ROVER,     OnExecuteGoRover);
 
             Mediator.Subscribe(CommonDefs.MSG_NONE_SCREEN,    OnNoneScreen);
             Mediator.Subscribe(CommonDefs.MSG_TAKEOFF_SCREEN, OnTakeoffScreen);
             Mediator.Subscribe(CommonDefs.MSG_LANDING_SCREEN, OnLandingScreen);
+            Mediator.Subscribe(CommonDefs.MSG_ROVER_SCREEN,   OnRoverScreen);
         }
 
         private void OnStartTimers(object obj)
@@ -286,7 +305,40 @@ namespace WpfApp1.ViewModel
             // Hook up the Elapsed event for the timer.             
             _suicideBurnTimer.AutoReset = true;
             _suicideBurnTimer.Enabled = true;
+
+            SetEventLogMessage("Starting Rover Timer...");
+            if (_roverTimer == null)
+            {
+                _roverTimer = new System.Timers.Timer(250);
+                _roverTimer.Elapsed += OnTimedEventRoverTelemetry;
+            }
+
+            // Hook up the Elapsed event for the timer.             
+            _roverTimer.AutoReset = true;
+            _roverTimer.Enabled = true;
+
         }
+
+        private void OnTimedEventRoverTelemetry(Object source, ElapsedEventArgs e)
+        {
+            if (_missionController?.ShipControl.RoverStatus == CommonDefs.VesselState.Finished)
+            {
+                _roverTimer.Stop();
+                return;
+            }
+
+            //Update GUI
+            RoverData _data = _missionController?.ShipControl?.Telemetry?.GetRoverTelemetryInfo();
+
+            if (App.Current == null)//avoid crashes on application close by now
+            {
+                _roverTimer.Enabled = false;
+                return;
+            }
+
+            ((RoverViewModel)_roverViewModel).SafeUpdateRoverText(_data);
+        }
+
 
         private void OnTimedEventSuicideBurnTelemetry(Object source, ElapsedEventArgs e)
         {
@@ -389,6 +441,10 @@ namespace WpfApp1.ViewModel
 
             SetEventLogMessage("Stopping Suicide Burn Timer...");
             _suicideBurnTimer?.Stop();
+
+            SetEventLogMessage("Stopping Rover Timer...");
+            _roverTimer?.Stop();
+
         }
 
         private void OnConnect(object obj)
@@ -475,11 +531,31 @@ namespace WpfApp1.ViewModel
 
             Task.Run(() => AsyncExecuteSuicideBurn(_sbSetup));
         }
+        
         private void AsyncExecuteSuicideBurn(SuicideBurnSetup _sbSetup)
         {
             _missionController?.ExecuteSuicideBurn(_sbSetup);
             _maneuverBurnTime = 0;
             //OnStopTimers("");
+        }
+
+        private void OnExecuteGoRover(object obj)
+        {
+            if (!((ConnectionViewModel)_connectionViewModel).HasValidData())
+                return;
+
+            RoverControlDescriptor _roverSetup = (RoverControlDescriptor)obj;
+
+            OnSendMessage("Starting rover controller...");
+
+            _missionController?.ResetManualControl();
+
+            Task.Run(() => AsyncExecuteGoRover(_roverSetup));
+        }
+
+        private void AsyncExecuteGoRover(RoverControlDescriptor _roverSetup)
+        {
+            _missionController?.ExecuteGoRover(_roverSetup);
         }
 
         private void OnTakeoffScreen(object obj)
@@ -490,6 +566,11 @@ namespace WpfApp1.ViewModel
         private void OnLandingScreen(object obj)
         {
             ChangeViewModel(PageViewModels[1]);
+        }
+
+        private void OnRoverScreen(object obj)
+        {
+            ChangeViewModel(PageViewModels[2]);
         }
 
         private void OnNoneScreen(object obj)
